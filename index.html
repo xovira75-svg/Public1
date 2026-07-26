@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 5</div></div></div>
+<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 6</div></div></div>
 
 <script>
   window.__loadFailures = [];
@@ -43,7 +43,7 @@
     } else {
       lines.push('حدث خطأ غير متوقع أثناء تشغيل التطبيق.');
     }
-    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 5</div>';
+    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 6</div>';
   }
 
   function loadScriptFallback(urls, label) {
@@ -915,8 +915,12 @@ function CallScreen({ call, localVideoRef, remoteVideoRef, onHangup, onToggleMut
   return (
     <div className="call-overlay">
       <video ref={remoteVideoRef} autoPlay playsInline
-        style={{ display: call.type === "video" && call.status === "in-call" ? "block" : "none" }}
-        className="remote-video" />
+        style={
+          call.type === "video" && call.status === "in-call"
+            ? { display: "block" }
+            : { position: "absolute", width: 2, height: 2, opacity: 0, pointerEvents: "none" }
+        }
+        className={call.type === "video" && call.status === "in-call" ? "remote-video" : ""} />
       {!(call.type === "video" && call.status === "in-call") && <div className="call-bg-glow" />}
 
       <div className="call-center" style={{ position: call.type === "video" && call.status === "in-call" ? "absolute" : "relative", top: call.type === "video" && call.status === "in-call" ? 40 : "auto" }}>
@@ -1357,8 +1361,9 @@ const CSS = `
   --text:#EAF6F1; --text-dim:#8FA79D; --text-faint:#4B5C54; --danger:#FF5470;
 }
 *{box-sizing:border-box;}
+html,body{height:100%; margin:0; padding:0; overflow:hidden; overscroll-behavior:none;}
 .nabd-root{
-  width:100%; min-height:100vh; min-height:100dvh;
+  position:fixed; inset:0;
   background: radial-gradient(circle at 20% 0%, rgba(23,233,165,.10), transparent 45%),
               radial-gradient(circle at 100% 100%, rgba(34,211,238,.08), transparent 40%),
               var(--bg);
@@ -1366,20 +1371,20 @@ const CSS = `
   display:flex; align-items:flex-start; justify-content:center;
 }
 .app-shell{
-  width:100%; max-width:480px; min-height:100vh; min-height:100dvh;
+  width:100%; max-width:480px; height:100%;
   background:var(--bg); display:flex; flex-direction:column; position:relative; overflow:hidden;
   padding-top:env(safe-area-inset-top, 0px); padding-bottom:env(safe-area-inset-bottom, 0px);
 }
 @media (min-width:560px){
   .nabd-root{ align-items:center; }
   .app-shell{ border-radius:30px; box-shadow:0 40px 90px rgba(0,0,0,.55), 0 0 0 1px var(--border);
-    margin:20px 0; min-height:calc(100vh - 40px); min-height:calc(100dvh - 40px); height:860px; max-height:calc(100vh - 40px); }
+    margin:20px 0; height:calc(100% - 40px); max-height:860px; }
 }
 button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
 input{font-family:inherit;}
 ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-thumb{background:var(--border); border-radius:8px;}
 
-.center-fill{width:100%; height:100vh; height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; background:var(--bg);}
+.center-fill{width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; background:var(--bg);}
 .brand-word{font-weight:900; font-size:30px; letter-spacing:1px; color:var(--text);}
 .pulse-path{ stroke-dasharray:220; stroke-dashoffset:220; animation:draw 1.8s ease-in-out infinite; }
 @keyframes draw{ 0%{stroke-dashoffset:220;} 55%{stroke-dashoffset:0;} 100%{stroke-dashoffset:0; opacity:.35;} }
