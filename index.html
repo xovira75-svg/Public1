@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 6</div></div></div>
+<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 7</div></div></div>
 
 <script>
   window.__loadFailures = [];
@@ -43,7 +43,7 @@
     } else {
       lines.push('حدث خطأ غير متوقع أثناء تشغيل التطبيق.');
     }
-    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 6</div>';
+    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 7</div>';
   }
 
   function loadScriptFallback(urls, label) {
@@ -207,6 +207,15 @@ function X(p) { return <IconBase {...p}><line x1="18" y1="6" x2="6" y2="18" /><l
 function Copy(p) { return <IconBase {...p}><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></IconBase>; }
 function LogOut(p) { return <IconBase {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></IconBase>; }
 function Trash2(p) { return <IconBase {...p}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></IconBase>; }
+function MessageCircle(p) { return <IconBase {...p}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></IconBase>; }
+function CircleDot(p) { return <IconBase {...p}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" fill={p.color || "currentColor"} /></IconBase>; }
+function Users(p) { return <IconBase {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></IconBase>; }
+function History(p) { return <IconBase {...p}><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></IconBase>; }
+function Gift(p) { return <IconBase {...p}><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M12 8v13" /><path d="M19 12v7a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7" /><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5" /></IconBase>; }
+function PhoneMissed(p) { return <IconBase {...p}><line x1="23" y1="1" x2="17" y2="7" /><line x1="17" y1="1" x2="23" y2="7" /><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" /></IconBase>; }
+function PhoneIncoming(p) { return <IconBase {...p}><polyline points="16 2 16 8 22 8" /><line x1="22" y1="2" x2="16" y2="8" /><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" /></IconBase>; }
+function PhoneOutgoing(p) { return <IconBase {...p}><polyline points="16 8 22 8 22 2" /><line x1="22" y1="2" x2="16" y2="8" /><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" /></IconBase>; }
+function Coin(p) { return <IconBase {...p}><circle cx="12" cy="12" r="9" /><path d="M9.5 9.2a2.5 2 0 0 1 2.5-1.2c1.5 0 2.5.8 2.5 2 0 2.5-4 1.8-4 4.3 0 1.2 1 2 2.5 2a2.5 2 0 0 0 2.5-1.5" /><line x1="12" y1="6" x2="12" y2="18" /></IconBase>; }
 
 /* =========================================================================
    نبض — Nabd. A WhatsApp-style chat app: 6-digit ID accounts, ID-based
@@ -224,6 +233,18 @@ const AVATAR_COLORS = [
   { id: "fuchsia", grad: ["#E879F9", "#A21CAF"] },
 ];
 const EMOJIS = ["😎", "🦄", "🐼", "🦊", "🐺", "🐸", "🦁", "🐯", "🐨", "🐵", "👾", "🤖", "🌙", "⚡", "🔥", "🌸"];
+const GIFTS = [
+  { id: "rose", emoji: "🌹", name: "وردة", cost: 100 },
+  { id: "heart", emoji: "💖", name: "قلب", cost: 300 },
+  { id: "balloon", emoji: "🎈", name: "بالون", cost: 500 },
+  { id: "choco", emoji: "🍫", name: "شوكولاتة", cost: 1000 },
+  { id: "ring", emoji: "💍", name: "خاتم", cost: 3000 },
+  { id: "diamond", emoji: "💎", name: "ماسة", cost: 5000 },
+  { id: "car", emoji: "🚗", name: "سيارة", cost: 20000 },
+  { id: "crown", emoji: "👑", name: "تاج", cost: 50000 },
+  { id: "rocket", emoji: "🚀", name: "صاروخ", cost: 100000 },
+  { id: "trophy", emoji: "🏆", name: "كأس أسطوري", cost: 250000 },
+];
 const ICE_SERVERS = [
   { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
   { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
@@ -550,7 +571,359 @@ function HomeScreen({ profile, chatlist, onOpenChat, onOpenSearch, onOpenSetting
   );
 }
 
-/* ------------------------------ Search modal ------------------------------ */
+/* ---------------------------- bottom nav + tabs container ---------------------------- */
+function BottomNav({ active, onChange }) {
+  const tabs = [
+    { id: "chats", label: "الدردشات", Icon: MessageCircle },
+    { id: "updates", label: "التحديثات", Icon: CircleDot },
+    { id: "communities", label: "المجتمعات", Icon: Users },
+    { id: "calls", label: "المكالمات", Icon: History },
+  ];
+  return (
+    <div className="bottom-nav">
+      {tabs.map((t) => {
+        const isActive = active === t.id;
+        return (
+          <button key={t.id} className={"bottom-nav-btn" + (isActive ? " active" : "")} onClick={() => onChange(t.id)}>
+            <t.Icon size={22} color={isActive ? "var(--accent)" : "var(--text-faint)"} />
+            <span className="bottom-nav-label">{t.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function MainTabsScreen({ tab, onChangeTab, homeProps, updatesProps, communitiesProps, callsProps }) {
+  return (
+    <div className="screen">
+      <div className="tab-content">
+        {tab === "chats" && <HomeScreen {...homeProps} />}
+        {tab === "updates" && <UpdatesScreen {...updatesProps} />}
+        {tab === "communities" && <CommunitiesScreen {...communitiesProps} />}
+        {tab === "calls" && <CallsScreen {...callsProps} />}
+      </div>
+      <BottomNav active={tab} onChange={onChangeTab} />
+    </div>
+  );
+}
+
+/* ------------------------------- calls tab ------------------------------- */
+function outcomeLabel(entry) {
+  if (entry.outcome === "answered") return entry.direction === "outgoing" ? "مكالمة صادرة" : "مكالمة واردة";
+  if (entry.outcome === "declined") return entry.direction === "outgoing" ? "تم الرفض" : "رفضتها";
+  if (entry.outcome === "no_answer") return "لم يتم الرد";
+  if (entry.outcome === "missed") return "مكالمة فائتة";
+  return "مكالمة";
+}
+function CallsScreen({ profile, onCall, onOpenSettings }) {
+  const [entries, setEntries] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const keys = await sList("callhistory:", false);
+      keys.sort().reverse();
+      const top = keys.slice(0, 80);
+      const items = [];
+      for (const k of top) {
+        const v = await sGet(k, false);
+        if (v) items.push(v);
+      }
+      if (!cancelled) setEntries(items);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <div className="screen">
+      <div className="top-bar">
+        <button className="icon-btn" onClick={onOpenSettings}>
+          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={34} />
+        </button>
+        <div className="top-title"><span>المكالمات</span></div>
+        <div style={{ width: 38 }} />
+      </div>
+
+      {entries === null ? (
+        <div className="empty-state"><span className="spinner" /></div>
+      ) : entries.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-pulse"><History size={38} color="var(--text-faint)" /></div>
+          <div className="empty-title">لا مكالمات بعد</div>
+          <div className="empty-sub">سجل مكالماتك الصوتية والمرئية بيظهر هنا.</div>
+        </div>
+      ) : (
+        <div className="chat-list">
+          {entries.map((e, i) => {
+            const missed = e.outcome === "missed" || (e.outcome === "declined" && e.direction === "incoming");
+            return (
+              <button key={i} className="chat-row" onClick={() => onCall({ id: e.contactId, name: e.contactName, emoji: e.contactEmoji, color: e.contactColor }, e.type)}>
+                <Avatar name={e.contactName} emoji={e.contactEmoji} color={e.contactColor} size={50} />
+                <div className="chat-row-mid">
+                  <div className="chat-row-top">
+                    <span className="chat-row-name" style={missed ? { color: "var(--danger)" } : {}}>{e.contactName}</span>
+                    <span className="chat-row-time">{fmtTime(e.ts)}</span>
+                  </div>
+                  <div className="chat-row-bottom call-row-bottom">
+                    {e.direction === "outgoing" ? <PhoneOutgoing size={13} color="var(--text-faint)" /> : missed ? <PhoneMissed size={13} color="var(--danger)" /> : <PhoneIncoming size={13} color="var(--text-faint)" />}
+                    <span className="chat-row-preview">{outcomeLabel(e)}{e.outcome === "answered" ? ` · ${fmtClock(e.duration)}` : ""}</span>
+                  </div>
+                </div>
+                {e.type === "video" ? <Video size={18} color="var(--accent)" /> : <Phone size={18} color="var(--accent)" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------ updates tab ------------------------------- */
+const STATUS_BG = ["#0EA57C", "#0369A1", "#6D28D9", "#BE123C", "#B45309", "#4D7C0F"];
+function UpdatesScreen({ profile, chatlist, onOpenSettings }) {
+  const [myStatus, setMyStatus] = useState(undefined);
+  const [friendStatuses, setFriendStatuses] = useState([]);
+  const [composing, setComposing] = useState(false);
+  const [viewing, setViewing] = useState(null);
+
+  const load = async () => {
+    const mine = await sGet(`status:${profile.id}`, true);
+    setMyStatus(mine && mine.expiresAt > Date.now() ? mine : null);
+    const contacts = Object.values(chatlist || {});
+    const results = [];
+    for (const c of contacts) {
+      const s = await sGet(`status:${c.id}`, true);
+      if (s && s.expiresAt > Date.now()) results.push(s);
+    }
+    setFriendStatuses(results.sort((a, b) => b.ts - a.ts));
+  };
+
+  useEffect(() => {
+    load();
+    const iv = setInterval(load, 15000);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatlist]);
+
+  const postStatus = async (text, bg) => {
+    const ts = Date.now();
+    const s = { userId: profile.id, name: profile.name, emoji: profile.emoji, color: profile.color, text, bg, ts, expiresAt: ts + 24 * 3600 * 1000 };
+    await sSet(`status:${profile.id}`, s, true);
+    setMyStatus(s);
+    setComposing(false);
+  };
+
+  const deleteStatus = async () => {
+    await sSet(`status:${profile.id}`, { ...myStatus, expiresAt: 0 }, true);
+    setMyStatus(null);
+  };
+
+  return (
+    <div className="screen">
+      <div className="top-bar">
+        <button className="icon-btn" onClick={onOpenSettings}>
+          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={34} />
+        </button>
+        <div className="top-title"><span>التحديثات</span></div>
+        <div style={{ width: 38 }} />
+      </div>
+
+      <div className="chat-list">
+        <button className="chat-row" onClick={() => (myStatus ? setViewing(myStatus) : setComposing(true))}>
+          <div style={{ position: "relative" }}>
+            <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={50} />
+            {!myStatus && (
+              <span className="status-add-badge"><Plus size={12} color="#07130F" /></span>
+            )}
+          </div>
+          <div className="chat-row-mid">
+            <div className="chat-row-top"><span className="chat-row-name">حالتي</span></div>
+            <div className="chat-row-bottom"><span className="chat-row-preview">{myStatus ? myStatus.text : "أضف تحديثًا"}</span></div>
+          </div>
+        </button>
+
+        {friendStatuses.length > 0 && <div className="status-section-label">تحديثات جديدة</div>}
+        {friendStatuses.map((s) => (
+          <button key={s.userId} className="chat-row" onClick={() => setViewing(s)}>
+            <span className="status-ring"><Avatar name={s.name} emoji={s.emoji} color={s.color} size={46} /></span>
+            <div className="chat-row-mid">
+              <div className="chat-row-top"><span className="chat-row-name">{s.name}</span><span className="chat-row-time">{fmtTime(s.ts)}</span></div>
+              <div className="chat-row-bottom"><span className="chat-row-preview">{s.text}</span></div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {composing && <StatusComposer onClose={() => setComposing(false)} onPost={postStatus} />}
+      {viewing && <StatusViewer status={viewing} mine={viewing.userId === profile.id} onDelete={deleteStatus} onClose={() => setViewing(null)} />}
+    </div>
+  );
+}
+
+function StatusComposer({ onClose, onPost }) {
+  const [text, setText] = useState("");
+  const [bg, setBg] = useState(STATUS_BG[0]);
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle" />
+        <div className="modal-title">تحديث جديد</div>
+        <div className="status-preview" style={{ background: bg }}>
+          <textarea className="status-textarea" placeholder="اكتب شيئًا…" value={text} maxLength={120}
+            onChange={(e) => setText(e.target.value)} autoFocus />
+        </div>
+        <div className="swatch-row" style={{ marginTop: 14, justifyContent: "center" }}>
+          {STATUS_BG.map((c) => (
+            <button key={c} className={"swatch" + (bg === c ? " swatch-active" : "")} style={{ background: c }} onClick={() => setBg(c)} />
+          ))}
+        </div>
+        <button className="primary-btn" disabled={!text.trim()} onClick={() => onPost(text.trim(), bg)}>نشر التحديث</button>
+      </div>
+    </div>
+  );
+}
+
+function StatusViewer({ status, mine, onDelete, onClose }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 6000);
+    return () => clearTimeout(t);
+  }, [status, onClose]);
+  return (
+    <div className="status-viewer" style={{ background: status.bg }} onClick={onClose}>
+      <div className="status-viewer-progress"><span /></div>
+      <div className="status-viewer-header">
+        <Avatar name={status.name} emoji={status.emoji} color={status.color} size={34} />
+        <span className="status-viewer-name">{status.name}</span>
+        <span className="status-viewer-time">{fmtTime(status.ts)}</span>
+      </div>
+      <div className="status-viewer-text">{status.text}</div>
+      {mine && (
+        <button className="status-delete-btn" onClick={(e) => { e.stopPropagation(); onDelete(); onClose(); }}>
+          <Trash2 size={16} color="#fff" /> حذف
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------- communities (groups) tab ---------------------------- */
+function CommunitiesScreen({ profile, onOpenGroup, onOpenSettings }) {
+  const [groups, setGroups] = useState(null);
+  const [showCreate, setShowCreate] = useState(false);
+
+  const load = async () => {
+    const keys = await sList(`groupmember:${profile.id}:`, true);
+    const items = [];
+    for (const k of keys) {
+      const ptr = await sGet(k, true);
+      if (!ptr) continue;
+      const g = await sGet(`group:${ptr.groupId}`, true);
+      if (g) items.push(g);
+    }
+    setGroups(items.sort((a, b) => b.createdAt - a.createdAt));
+  };
+  useEffect(() => { load(); const iv = setInterval(load, 10000); return () => clearInterval(iv); }, [profile.id]);
+
+  return (
+    <div className="screen">
+      <div className="top-bar">
+        <button className="icon-btn" onClick={onOpenSettings}>
+          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={34} />
+        </button>
+        <div className="top-title"><span>المجتمعات</span></div>
+        <div style={{ width: 38 }} />
+      </div>
+
+      {groups === null ? (
+        <div className="empty-state"><span className="spinner" /></div>
+      ) : groups.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-pulse"><Users size={38} color="var(--text-faint)" /></div>
+          <div className="empty-title">لا مجتمعات بعد</div>
+          <div className="empty-sub">أنشئ مجموعة مع أصدقائك من محادثاتك الحالية.</div>
+          <button className="secondary-btn" onClick={() => setShowCreate(true)}><Plus size={17} /> إنشاء مجتمع</button>
+        </div>
+      ) : (
+        <div className="chat-list">
+          {groups.map((g) => (
+            <button key={g.id} className="chat-row" onClick={() => onOpenGroup(g)}>
+              <Avatar name={g.name} emoji={g.emoji || "👥"} color={g.color} size={50} />
+              <div className="chat-row-mid">
+                <div className="chat-row-top"><span className="chat-row-name">{g.name}</span></div>
+                <div className="chat-row-bottom"><span className="chat-row-preview">{g.members.length} أعضاء</span></div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <button className="fab" onClick={() => setShowCreate(true)}><Plus size={26} color="#07130F" /></button>
+      {showCreate && <CreateGroupModal profile={profile} onClose={() => setShowCreate(false)} onCreated={(g) => { setShowCreate(false); load(); onOpenGroup(g); }} />}
+    </div>
+  );
+}
+
+function CreateGroupModal({ profile, onClose, onCreated }) {
+  const [name, setName] = useState("");
+  const [contacts, setContacts] = useState([]);
+  const [selected, setSelected] = useState({});
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const cl = await sGet("chatlist", false);
+      setContacts(Object.values((cl && cl.contacts) || {}));
+    })();
+  }, []);
+
+  const toggle = (id) => setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const create = async () => {
+    const memberIds = Object.keys(selected).filter((id) => selected[id]);
+    if (!name.trim() || memberIds.length === 0 || busy) return;
+    setBusy(true);
+    const groupId = `${Date.now()}_${Math.floor(Math.random() * 9999)}`;
+    const members = [profile.id, ...memberIds];
+    const group = { id: groupId, name: name.trim(), emoji: "👥", color: profile.color, members, createdBy: profile.id, createdAt: Date.now() };
+    await sSet(`group:${groupId}`, group, true);
+    for (const m of members) {
+      await sSet(`groupmember:${m}:${groupId}`, { groupId, ts: Date.now() }, true);
+    }
+    setBusy(false);
+    onCreated(group);
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle" />
+        <div className="modal-title">إنشاء مجتمع</div>
+        <input className="text-input" placeholder="اسم المجتمع" value={name} onChange={(e) => setName(e.target.value)} />
+        <label className="field-label">أضف أعضاء من محادثاتك</label>
+        {contacts.length === 0 ? (
+          <div className="search-msg">ابدأ محادثة مع أصدقائك أولًا لتضيفهم لمجتمع</div>
+        ) : (
+          <div className="member-list">
+            {contacts.map((c) => (
+              <button key={c.id} className={"member-row" + (selected[c.id] ? " member-row-active" : "")} onClick={() => toggle(c.id)}>
+                <Avatar name={c.name} emoji={c.emoji} color={c.color} size={38} />
+                <span className="member-row-name">{c.name}</span>
+                {selected[c.id] && <Check size={18} color="var(--accent)" />}
+              </button>
+            ))}
+          </div>
+        )}
+        <button className="primary-btn" disabled={!name.trim() || busy} onClick={create}>
+          {busy ? <span className="spinner" /> : "إنشاء"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------- Search modal ------------------------------ */
 function SearchModal({ profile, onClose, onFound }) {
   const [id, setId] = useState("");
   const [state, setState] = useState("idle"); // idle | loading | notfound | found | self
@@ -641,7 +1014,7 @@ function SettingsScreen({ profile, authEmail, onBack, onSignOut, onToast }) {
 }
 
 /* -------------------------------- Chat screen ------------------------------ */
-function ChatScreen({ profile, contact, onBack, onSent, onStartCall }) {
+function ChatScreen({ profile, contact, onBack, onSent, onStartCall, coins, onSpendCoins }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [otherSeenTs, setOtherSeenTs] = useState(0);
@@ -649,6 +1022,24 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall }) {
   const [otherOnline, setOtherOnline] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recSecs, setRecSecs] = useState(0);
+  const [showGifts, setShowGifts] = useState(false);
+  const [giftAnim, setGiftAnim] = useState(null);
+  const giftQueueRef = useRef([]);
+  const giftPlayingRef = useRef(false);
+  const sendingRef = useRef(false);
+  const isInitialLoadRef = useRef(true);
+
+  const advanceGiftQueue = () => {
+    const next = giftQueueRef.current.shift();
+    if (!next) { giftPlayingRef.current = false; setGiftAnim(null); return; }
+    giftPlayingRef.current = true;
+    setGiftAnim(next);
+    setTimeout(advanceGiftQueue, 2600);
+  };
+  const playGiftAnim = (gift) => {
+    giftQueueRef.current.push(gift);
+    if (!giftPlayingRef.current) advanceGiftQueue();
+  };
 
   const knownKeys = useRef(new Set());
   const scrollRef = useRef(null);
@@ -665,10 +1056,22 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall }) {
     const got = [];
     for (const k of fresh) {
       const v = await sGet(k, true);
-      if (v) got.push(v);
+      if (v) got.push({ ...v, _key: k });
       knownKeys.current.add(k);
     }
-    if (got.length) setMessages((prev) => [...prev, ...got].sort((a, b) => a.ts - b.ts));
+    if (got.length) {
+      setMessages((prev) => {
+        const seen = new Set(prev.map((m) => m._key));
+        const add = got.filter((m) => !seen.has(m._key));
+        if (!add.length) return prev;
+        return [...prev, ...add].sort((a, b) => a.ts - b.ts);
+      });
+      const freshGifts = got.filter((m) => m.type === "gift" && m.from !== profile.id);
+      if (freshGifts.length && !isInitialLoadRef.current) {
+        freshGifts.forEach((g) => playGiftAnim(g));
+      }
+    }
+    isInitialLoadRef.current = false;
   }, [convId]);
 
   const checkOtherSeen = useCallback(async () => {
@@ -692,6 +1095,7 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall }) {
 
   useEffect(() => {
     knownKeys.current = new Set();
+    isInitialLoadRef.current = true;
     setMessages([]);
     loadNew(); markSeen(); checkOtherSeen(); checkTyping(); checkPresence();
     const iv = setInterval(() => { loadNew(); checkOtherSeen(); checkTyping(); markSeen(); }, 2200);
@@ -705,18 +1109,25 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall }) {
   }, [messages.length, otherTyping]);
 
   const send = async (payload) => {
-    const ts = Date.now();
-    const key = `msg:${convId}:${ts}_${Math.floor(Math.random() * 9999)}`;
-    const msg = { from: profile.id, to: contact.id, ts, ...payload };
-    await sSet(key, msg, true);
-    knownKeys.current.add(key);
-    setMessages((prev) => [...prev, msg]);
-    const preview = payload.type === "voice" ? "🎤 رسالة صوتية" : payload.text;
-    await sSet(`lastmsg:${contact.id}:${convId}`, {
-      convId, otherId: profile.id, otherName: profile.name, otherEmoji: profile.emoji,
-      otherColor: profile.color, preview, ts, fromId: profile.id,
-    }, true);
-    onSent(contact, preview, ts);
+    if (sendingRef.current) return;
+    sendingRef.current = true;
+    try {
+      const ts = Date.now();
+      const key = `msg:${convId}:${ts}_${Math.floor(Math.random() * 9999)}`;
+      const msg = { from: profile.id, to: contact.id, ts, _key: key, ...payload };
+      await sSet(key, msg, true);
+      knownKeys.current.add(key);
+      setMessages((prev) => (prev.some((m) => m._key === key) ? prev : [...prev, msg]));
+      const preview = payload.type === "voice" ? "🎤 رسالة صوتية" : payload.type === "gift" ? `🎁 ${payload.giftEmoji} هدية` : payload.text;
+      await sSet(`lastmsg:${contact.id}:${convId}`, {
+        convId, otherId: profile.id, otherName: profile.name, otherEmoji: profile.emoji,
+        otherColor: profile.color, preview, ts, fromId: profile.id,
+      }, true);
+      onSent(contact, preview, ts);
+      if (payload.type === "gift") playGiftAnim(msg);
+    } finally {
+      sendingRef.current = false;
+    }
   };
 
   const sendText = async () => {
@@ -725,6 +1136,15 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall }) {
     setInput("");
     await send({ type: "text", text: t });
     sSet(`typing:${convId}:${profile.id}`, { ts: 0 }, true);
+  };
+
+  const sendGift = async (gift) => {
+    setShowGifts(false);
+    if (coins < gift.cost) return "insufficient";
+    const ok = await onSpendCoins(gift.cost);
+    if (!ok) return "insufficient";
+    await send({ type: "gift", giftId: gift.id, giftEmoji: gift.emoji, giftName: gift.name, cost: gift.cost });
+    return "ok";
   };
 
   const onChangeInput = (v) => {
@@ -799,9 +1219,15 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall }) {
             <React.Fragment key={i}>
               {showDay && <div className="day-chip"><span>{dayLabel(m.ts)}</span></div>}
               <div style={{ display: "flex", justifyContent: mine ? "flex-start" : "flex-end" }}>
-                <div className={"bubble " + (mine ? "bubble-mine" : "bubble-other")}>
+                <div className={"bubble " + (mine ? "bubble-mine" : "bubble-other") + (m.type === "gift" ? " bubble-gift" : "")}>
                   {m.type === "voice" ? (
                     <VoiceBubble src={m.audio} duration={m.duration} mine={mine} />
+                  ) : m.type === "gift" ? (
+                    <div className="gift-bubble-content">
+                      <span className="gift-bubble-emoji">{m.giftEmoji}</span>
+                      <span className="gift-bubble-name">{m.giftName}</span>
+                      <span className="gift-bubble-cost"><Coin size={12} /> {m.cost.toLocaleString()}</span>
+                    </div>
                   ) : (
                     <span className="bubble-text">{m.text}</span>
                   )}
@@ -834,6 +1260,7 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall }) {
           </div>
         ) : (
           <>
+            <button className="icon-btn gift-trigger-btn" onClick={() => setShowGifts(true)}><Gift size={21} color="var(--accent-2)" /></button>
             <input
               className="chat-input" value={input} placeholder="اكتب رسالة…"
               onChange={(e) => onChangeInput(e.target.value)}
@@ -846,6 +1273,232 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall }) {
             )}
           </>
         )}
+      </div>
+
+      {showGifts && (
+        <GiftPickerModal coins={coins} onClose={() => setShowGifts(false)} onPick={sendGift} />
+      )}
+      {giftAnim && <GiftAnimation gift={giftAnim} mine={giftAnim.from === profile.id} senderName={giftAnim.from === profile.id ? profile.name : contact.name} />}
+    </div>
+  );
+}
+
+/* ----------------------------- group chat screen ---------------------------- */
+function GroupChatScreen({ profile, group, onBack }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [recording, setRecording] = useState(false);
+  const [recSecs, setRecSecs] = useState(0);
+  const knownKeys = useRef(new Set());
+  const scrollRef = useRef(null);
+  const sendingRef = useRef(false);
+  const mediaRecRef = useRef(null);
+  const chunksRef = useRef([]);
+  const recTimerRef = useRef(null);
+  const recStreamRef = useRef(null);
+  const convId = `group-${group.id}`;
+
+  const loadNew = useCallback(async () => {
+    const keys = await sList(`msg:${convId}:`, true);
+    const fresh = keys.filter((k) => !knownKeys.current.has(k));
+    if (fresh.length === 0) return;
+    const got = [];
+    for (const k of fresh) {
+      const v = await sGet(k, true);
+      if (v) got.push({ ...v, _key: k });
+      knownKeys.current.add(k);
+    }
+    if (got.length) {
+      setMessages((prev) => {
+        const seen = new Set(prev.map((m) => m._key));
+        const add = got.filter((m) => !seen.has(m._key));
+        if (!add.length) return prev;
+        return [...prev, ...add].sort((a, b) => a.ts - b.ts);
+      });
+    }
+  }, [convId]);
+
+  useEffect(() => {
+    knownKeys.current = new Set();
+    setMessages([]);
+    loadNew();
+    const iv = setInterval(loadNew, 2200);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [group.id]);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages.length]);
+
+  const send = async (payload) => {
+    if (sendingRef.current) return;
+    sendingRef.current = true;
+    try {
+      const ts = Date.now();
+      const key = `msg:${convId}:${ts}_${Math.floor(Math.random() * 9999)}`;
+      const msg = { from: profile.id, fromName: profile.name, fromEmoji: profile.emoji, fromColor: profile.color, ts, _key: key, ...payload };
+      await sSet(key, msg, true);
+      knownKeys.current.add(key);
+      setMessages((prev) => (prev.some((m) => m._key === key) ? prev : [...prev, msg]));
+    } finally {
+      sendingRef.current = false;
+    }
+  };
+
+  const sendText = async () => {
+    const t = input.trim();
+    if (!t) return;
+    setInput("");
+    await send({ type: "text", text: t });
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recStreamRef.current = stream;
+      chunksRef.current = [];
+      const rec = new MediaRecorder(stream);
+      mediaRecRef.current = rec;
+      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      rec.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const reader = new FileReader();
+        reader.onloadend = async () => { await send({ type: "voice", audio: reader.result, duration: recSecs }); };
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      rec.start();
+      setRecording(true);
+      setRecSecs(0);
+      recTimerRef.current = setInterval(() => {
+        setRecSecs((s) => { if (s >= 59) { stopRecording(); return s; } return s + 1; });
+      }, 1000);
+    } catch (e) { setRecording(false); }
+  };
+  const stopRecording = () => {
+    if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") mediaRecRef.current.stop();
+    clearInterval(recTimerRef.current);
+    setRecording(false);
+  };
+  const cancelRecording = () => {
+    if (mediaRecRef.current) { mediaRecRef.current.onstop = null; if (mediaRecRef.current.state !== "inactive") mediaRecRef.current.stop(); }
+    if (recStreamRef.current) recStreamRef.current.getTracks().forEach((t) => t.stop());
+    clearInterval(recTimerRef.current);
+    setRecording(false);
+  };
+
+  let lastDay = null;
+  return (
+    <div className="screen">
+      <div className="top-bar chat-top">
+        <button className="icon-btn" onClick={onBack}><ArrowRight size={22} color="var(--text)" /></button>
+        <Avatar name={group.name} emoji={group.emoji || "👥"} color={group.color} size={38} />
+        <div className="chat-top-mid">
+          <div className="chat-top-name">{group.name}</div>
+          <div className="chat-top-status" style={{ color: "var(--text-dim)" }}>{group.members.length} أعضاء</div>
+        </div>
+      </div>
+
+      <div className="messages-area" ref={scrollRef}>
+        {messages.map((m, i) => {
+          const mine = m.from === profile.id;
+          const showDay = dayLabel(m.ts) !== lastDay;
+          lastDay = dayLabel(m.ts);
+          return (
+            <React.Fragment key={i}>
+              {showDay && <div className="day-chip"><span>{dayLabel(m.ts)}</span></div>}
+              <div style={{ display: "flex", justifyContent: mine ? "flex-start" : "flex-end" }}>
+                <div className={"bubble " + (mine ? "bubble-mine" : "bubble-other")}>
+                  {!mine && <span className="group-sender-name">{m.fromName}</span>}
+                  {m.type === "voice" ? (
+                    <VoiceBubble src={m.audio} duration={m.duration} mine={mine} />
+                  ) : (
+                    <span className="bubble-text">{m.text}</span>
+                  )}
+                  <span className="bubble-meta">{fmtTime(m.ts)}</span>
+                </div>
+              </div>
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      <div className="input-bar">
+        {recording ? (
+          <div className="recording-row">
+            <button className="icon-btn" onClick={cancelRecording}><X size={20} color="var(--danger)" /></button>
+            <div className="recording-indicator"><span className="rec-dot" /> جارٍ التسجيل… {fmtClock(recSecs)}</div>
+            <button className="send-btn" onClick={stopRecording}><Send size={19} color="#07130F" /></button>
+          </div>
+        ) : (
+          <>
+            <input className="chat-input" value={input} placeholder="اكتب رسالة…"
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendText(); } }} />
+            {input.trim() ? (
+              <button className="send-btn" onClick={sendText}><Send size={19} color="#07130F" /></button>
+            ) : (
+              <button className="send-btn" onClick={startRecording}><Mic size={19} color="#07130F" /></button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GiftAnimation({ gift, mine, senderName }) {
+  return (
+    <div className="gift-anim-overlay">
+      <div className="gift-anim-burst">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <span key={i} className="gift-anim-particle" style={{
+            "--tx": `${(Math.random() * 2 - 1) * 140}px`,
+            "--ty": `${-(60 + Math.random() * 160)}px`,
+            "--rot": `${(Math.random() * 2 - 1) * 60}deg`,
+            animationDelay: `${i * 0.05}s`,
+          }}>{gift.giftEmoji}</span>
+        ))}
+        <div className="gift-anim-center">
+          <span className="gift-anim-emoji">{gift.giftEmoji}</span>
+        </div>
+      </div>
+      <div className="gift-anim-caption">{mine ? "أنت أرسلت" : `${senderName} أرسل`} {gift.giftName} 🎉</div>
+    </div>
+  );
+}
+
+function GiftPickerModal({ coins, onClose, onPick }) {
+  const [insufficientId, setInsufficientId] = useState(null);
+  const pick = async (gift) => {
+    const result = await onPick(gift);
+    if (result === "insufficient") {
+      setInsufficientId(gift.id);
+      setTimeout(() => setInsufficientId(null), 1200);
+    }
+  };
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle" />
+        <div className="modal-title gift-modal-title">
+          <span>إرسال هدية</span>
+          <span className="coin-balance"><Coin size={16} color="#FFC94A" /> {coins.toLocaleString()}</span>
+        </div>
+        <div className="gift-grid">
+          {GIFTS.map((g) => (
+            <button
+              key={g.id}
+              className={"gift-cell" + (insufficientId === g.id ? " gift-cell-shake" : "") + (coins < g.cost ? " gift-cell-disabled" : "")}
+              onClick={() => pick(g)}
+            >
+              <span className="gift-cell-emoji">{g.emoji}</span>
+              <span className="gift-cell-name">{g.name}</span>
+              <span className="gift-cell-cost"><Coin size={11} color="#FFC94A" /> {g.cost.toLocaleString()}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -969,7 +1622,9 @@ function App() {
   const [authUser, setAuthUser] = useState(undefined); // undefined = checking, null = logged out, obj = logged in
   const [profile, setProfile] = useState(undefined);
   const [view, setView] = useState("home");
+  const [mainTab, setMainTab] = useState("chats");
   const [activeContact, setActiveContact] = useState(null);
+  const [activeGroup, setActiveGroup] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
   const [chatlist, setChatlist] = useState({});
   const [toast, setToast] = useState(null);
@@ -1014,7 +1669,9 @@ function App() {
     (async () => {
       const p = await sGet("profile", false);
       if (p) {
-        setProfile(p);
+        const withCoins = typeof p.coins === "number" ? p : { ...p, coins: 1000000 };
+        setProfile(withCoins);
+        if (withCoins !== p) await sSet("profile", withCoins, false);
         const cl = await sGet("chatlist", false);
         setChatlist(cl && cl.contacts ? cl.contacts : {});
       } else {
@@ -1027,10 +1684,18 @@ function App() {
 
   const handleCreateProfile = async ({ name, color, emoji }) => {
     const id = await generateUniqueId();
-    const prof = { id, name, color, emoji, email: authUser.email };
-    await sSet(`users:${id}`, { ...prof, lastSeen: Date.now() }, true);
+    const prof = { id, name, color, emoji, email: authUser.email, coins: 1000000 };
+    await sSet(`users:${id}`, { id, name, color, emoji, lastSeen: Date.now() }, true);
     await sSet("profile", prof, false);
     setProfile(prof);
+  };
+
+  const spendCoins = async (amount) => {
+    if (!profile || profile.coins < amount) return false;
+    const updated = { ...profile, coins: profile.coins - amount };
+    setProfile(updated);
+    await sSet("profile", updated, false);
+    return true;
   };
 
   const handleSignOut = async () => {
@@ -1096,8 +1761,27 @@ function App() {
     });
   };
 
+  const openGroup = (group) => {
+    setActiveGroup(group);
+    setView("group-chat");
+  };
+
   /* ================= CALLING ================= */
-  function cleanupCall() {
+  const logCall = (entry) => {
+    const key = `callhistory:${Date.now()}_${Math.floor(Math.random() * 9999)}`;
+    sSet(key, { ...entry, ts: entry.ts || Date.now() }, false);
+  };
+
+  function cleanupCall(outcomeOverride) {
+    const call = activeCallRef.current;
+    if (call) {
+      const duration = call.startTime ? Math.floor((Date.now() - call.startTime) / 1000) : 0;
+      const outcome = outcomeOverride || (call.startTime ? "answered" : (call.isCaller ? "no_answer" : "missed"));
+      logCall({
+        contactId: call.contact.id, contactName: call.contact.name, contactEmoji: call.contact.emoji, contactColor: call.contact.color,
+        type: call.type, direction: call.isCaller ? "outgoing" : "incoming", outcome, duration,
+      });
+    }
     if (callPollRef.current) clearInterval(callPollRef.current);
     callPollRef.current = null;
     if (pcRef.current) { try { pcRef.current.close(); } catch (e) {} pcRef.current = null; }
@@ -1177,7 +1861,7 @@ function App() {
           try { await pc.setRemoteDescription({ type: "answer", sdp: doc.answer }); } catch (e) {}
         } else if (doc.status === "declined") {
           showToast("تم رفض المكالمة");
-          cleanupCall();
+          cleanupCall("declined");
         } else if (doc.status === "ended") {
           cleanupCall();
         }
@@ -1231,6 +1915,10 @@ function App() {
     const doc = incomingCall;
     if (!doc) return;
     setIncomingCall(null);
+    logCall({
+      contactId: doc.callerId, contactName: doc.callerName, contactEmoji: doc.callerEmoji, contactColor: doc.callerColor,
+      type: doc.type, direction: "incoming", outcome: "declined", duration: 0,
+    });
     await sSet(`call:${profile.id}`, { ...doc, status: "declined" }, true);
   };
 
@@ -1287,6 +1975,10 @@ function App() {
     const iv = setInterval(async () => {
       const d = await sGet(`call:${profile.id}`, true);
       if (!d || d.status !== "ringing" || d.callId !== incomingCall.callId) {
+        logCall({
+          contactId: incomingCall.callerId, contactName: incomingCall.callerName, contactEmoji: incomingCall.callerEmoji, contactColor: incomingCall.callerColor,
+          type: incomingCall.type, direction: "incoming", outcome: "missed", duration: 0,
+        });
         setIncomingCall(null);
         stopRingtone();
       }
@@ -1307,11 +1999,17 @@ function App() {
         {authUser && profile === null && <ProfileSetupScreen onCreate={handleCreateProfile} />}
 
         {profile && view === "home" && (
-          <HomeScreen
-            profile={profile} chatlist={chatlist}
-            onOpenChat={openChat}
-            onOpenSearch={() => setShowSearch(true)}
-            onOpenSettings={() => setView("settings")}
+          <MainTabsScreen
+            tab={mainTab} onChangeTab={setMainTab}
+            homeProps={{
+              profile, chatlist,
+              onOpenChat: openChat,
+              onOpenSearch: () => setShowSearch(true),
+              onOpenSettings: () => setView("settings"),
+            }}
+            updatesProps={{ profile, chatlist, onOpenSettings: () => setView("settings") }}
+            communitiesProps={{ profile, onOpenGroup: openGroup, onOpenSettings: () => setView("settings") }}
+            callsProps={{ profile, onCall: startCall, onOpenSettings: () => setView("settings") }}
           />
         )}
         {profile && view === "chat" && activeContact && (
@@ -1320,7 +2018,11 @@ function App() {
             onBack={() => setView("home")}
             onSent={onSentFromChat}
             onStartCall={startCall}
+            coins={profile.coins || 0} onSpendCoins={spendCoins}
           />
+        )}
+        {profile && view === "group-chat" && activeGroup && (
+          <GroupChatScreen profile={profile} group={activeGroup} onBack={() => setView("home")} />
         )}
         {profile && view === "settings" && (
           <SettingsScreen profile={profile} authEmail={authUser && authUser.email} onBack={() => setView("home")} onSignOut={handleSignOut} onToast={showToast} />
@@ -1420,7 +2122,12 @@ input{font-family:inherit;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
 /* ---------- generic screen ---------- */
-.screen{display:flex; flex-direction:column; height:100%; animation:fadeSlideUp .3s ease;}
+.screen{display:flex; flex-direction:column; height:100%; position:relative; animation:fadeSlideUp .3s ease; min-height:0;}
+.tab-content{flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden;}
+.bottom-nav{display:flex; border-top:1px solid var(--border); background:var(--bg-elevated); flex-shrink:0; padding-bottom:env(safe-area-inset-bottom, 0px);}
+.bottom-nav-btn{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 4px 8px; color:var(--text-faint); transition:color .15s;}
+.bottom-nav-btn.active{color:var(--accent);}
+.bottom-nav-label{font-size:10.5px; font-weight:700;}
 @keyframes fadeSlideUp{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
 .top-bar{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border); background:var(--bg-elevated); flex-shrink:0;}
 .top-title{flex:1; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:800; font-size:17px;}
@@ -1482,6 +2189,30 @@ input{font-family:inherit;}
 .chat-top-mid{flex:1; min-width:0;}
 .chat-top-name{font-weight:800; font-size:15.5px;}
 .chat-top-status{font-size:12px; color:var(--accent); margin-top:1px;}
+.call-row-bottom{gap:6px;}
+.group-sender-name{font-size:11.5px; font-weight:800; color:var(--accent-2); display:block; margin-bottom:2px;}
+
+/* ---------- updates / status ---------- */
+.status-add-badge{position:absolute; bottom:-2px; inset-inline-end:-2px; width:18px; height:18px; border-radius:50%; background:var(--accent); border:2px solid var(--bg-elevated); display:flex; align-items:center; justify-content:center;}
+.status-section-label{padding:14px 16px 6px; font-size:12px; font-weight:800; color:var(--text-dim);}
+.status-ring{border-radius:50%; padding:2px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:flex;}
+.status-preview{border-radius:16px; padding:24px 16px; min-height:140px; display:flex; align-items:center; justify-content:center; margin-top:4px;}
+.status-textarea{width:100%; background:transparent; border:none; outline:none; color:#fff; font-size:19px; font-weight:700; text-align:center; resize:none; font-family:inherit; min-height:90px;}
+.status-viewer{position:absolute; inset:0; z-index:75; display:flex; flex-direction:column; padding:16px 18px; animation:fadeIn .2s ease;}
+.status-viewer-progress{height:3px; background:rgba(255,255,255,.3); border-radius:3px; overflow:hidden; margin-bottom:14px;}
+.status-viewer-progress span{display:block; height:100%; width:100%; background:#fff; animation:statusProgress 6s linear forwards;}
+@keyframes statusProgress{from{transform:translateX(-100%);} to{transform:translateX(0);}}
+.status-viewer-header{display:flex; align-items:center; gap:10px;}
+.status-viewer-name{color:#fff; font-weight:800; font-size:14px;}
+.status-viewer-time{color:rgba(255,255,255,.75); font-size:12px; margin-inline-start:auto; font-family:'Space Mono', monospace;}
+.status-viewer-text{flex:1; display:flex; align-items:center; justify-content:center; text-align:center; color:#fff; font-size:24px; font-weight:800; padding:20px; line-height:1.5;}
+.status-delete-btn{align-self:center; display:flex; align-items:center; gap:6px; background:rgba(0,0,0,.4); color:#fff; font-size:13px; font-weight:700; padding:10px 20px; border-radius:20px; margin-bottom:10px;}
+
+/* ---------- group creation ---------- */
+.member-list{max-height:280px; overflow-y:auto; margin-top:8px; display:flex; flex-direction:column; gap:6px;}
+.member-row{display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:13px; background:var(--card); border:1px solid var(--border);}
+.member-row-active{border-color:var(--accent); background:rgba(23,233,165,.08);}
+.member-row-name{font-size:14px; font-weight:600; flex:1; text-align:start;}
 .messages-area{flex:1; overflow-y:auto; padding:16px 12px; display:flex; flex-direction:column; gap:8px; background:
   repeating-linear-gradient(135deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 2px, transparent 2px, transparent 30px);}
 .day-chip{align-self:center; background:var(--card); color:var(--text-dim); font-size:11.5px; font-weight:700; padding:5px 14px; border-radius:20px; margin:8px 0;}
@@ -1503,6 +2234,44 @@ input{font-family:inherit;}
 .voice-wave{display:flex; align-items:center; gap:2px; flex:1; height:20px;}
 .voice-wave span{width:2.5px; border-radius:2px;}
 .voice-duration{font-size:11px; font-family:'Space Mono', monospace; opacity:.8;}
+
+/* ---------- gifts ---------- */
+.gift-trigger-btn{width:42px; height:42px; border-radius:50%; background:var(--card); border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+.bubble-gift{background:linear-gradient(135deg, #2A1B45, #1B1030) !important; border:1px solid rgba(232,121,249,.35) !important;}
+.gift-bubble-content{display:flex; align-items:center; gap:9px; padding:4px 6px;}
+.gift-bubble-emoji{font-size:34px; filter:drop-shadow(0 2px 6px rgba(0,0,0,.4));}
+.gift-bubble-name{font-weight:800; font-size:14px; color:#F0D9FF;}
+.gift-bubble-cost{display:flex; align-items:center; gap:3px; font-size:11px; color:#FFC94A; font-family:'Space Mono', monospace; margin-inline-start:auto;}
+.gift-modal-title{display:flex; align-items:center; justify-content:space-between;}
+.coin-balance{display:flex; align-items:center; gap:5px; font-size:13px; font-weight:700; color:#FFC94A; font-family:'Space Mono', monospace; background:rgba(255,201,74,.1); padding:5px 11px; border-radius:20px;}
+.gift-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; padding:16px 0 6px;}
+.gift-cell{display:flex; flex-direction:column; align-items:center; gap:3px; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:12px 4px; transition:transform .1s, border-color .15s;}
+.gift-cell:active{transform:scale(.93);}
+.gift-cell-disabled{opacity:.4;}
+.gift-cell-shake{animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);} 25%{transform:translateX(-5px);} 75%{transform:translateX(5px);}}
+.gift-cell-emoji{font-size:28px;}
+.gift-cell-name{font-size:11px; font-weight:700; color:var(--text-dim);}
+.gift-cell-cost{display:flex; align-items:center; gap:2px; font-size:10px; color:#FFC94A; font-family:'Space Mono', monospace;}
+
+.gift-anim-overlay{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; z-index:70; overflow:hidden;}
+.gift-anim-burst{position:relative; width:10px; height:10px; display:flex; align-items:center; justify-content:center;}
+.gift-anim-center{animation:giftPop 2.6s ease forwards;}
+.gift-anim-emoji{font-size:92px; display:block; filter:drop-shadow(0 8px 24px rgba(0,0,0,.5));}
+@keyframes giftPop{
+  0%{transform:scale(.2) rotate(-15deg); opacity:0;}
+  15%{transform:scale(1.3) rotate(8deg); opacity:1;}
+  25%{transform:scale(1) rotate(0deg); opacity:1;}
+  80%{transform:scale(1) translateY(0); opacity:1;}
+  100%{transform:scale(.8) translateY(-40px); opacity:0;}
+}
+.gift-anim-particle{position:absolute; font-size:26px; opacity:0; animation:giftParticle 1.8s ease-out forwards;}
+@keyframes giftParticle{
+  0%{transform:translate(0,0) scale(.4) rotate(0deg); opacity:0;}
+  15%{opacity:1;}
+  100%{transform:translate(var(--tx), var(--ty)) scale(1) rotate(var(--rot)); opacity:0;}
+}
+.gift-anim-caption{margin-top:18px; background:rgba(0,0,0,.55); color:#fff; font-weight:800; font-size:14px; padding:9px 20px; border-radius:20px; animation:fadeSlideUp .3s ease; text-shadow:0 2px 6px rgba(0,0,0,.5);}
 
 .input-bar{display:flex; align-items:center; gap:10px; padding:10px 12px; border-top:1px solid var(--border); background:var(--bg-elevated); flex-shrink:0;}
 .chat-input{flex:1; background:var(--card); border:1.5px solid var(--border); border-radius:22px; padding:11px 16px; color:var(--text); font-size:14.5px; outline:none;}
