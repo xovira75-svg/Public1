@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 9</div></div></div>
+<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 10</div></div></div>
 
 <script>
   window.__loadFailures = [];
@@ -43,7 +43,7 @@
     } else {
       lines.push('حدث خطأ غير متوقع أثناء تشغيل التطبيق.');
     }
-    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 9</div>';
+    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 10</div>';
   }
 
   function loadScriptFallback(urls, label) {
@@ -281,26 +281,73 @@ if (typeof document !== "undefined") {
   document.addEventListener("keydown", unlockAudio, { once: true });
 }
 
-function playGiftSound(tier) {
+/* ---- sound synthesis primitives ---- */
+function makeNoiseBuffer(ctx, duration) {
+  const size = Math.max(1, Math.floor(ctx.sampleRate * duration));
+  const buffer = ctx.createBuffer(1, size, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < size; i++) data[i] = Math.random() * 2 - 1;
+  return buffer;
+}
+function playNoiseBurst(ctx, { start = 0, duration = 0.3, peak = 0.2, filterFreq = 1200, filterType = "bandpass", filterQ = 1 } = {}) {
+  const src = ctx.createBufferSource();
+  src.buffer = makeNoiseBuffer(ctx, duration);
+  const filter = ctx.createBiquadFilter();
+  filter.type = filterType; filter.frequency.value = filterFreq; filter.Q.value = filterQ;
+  const g = ctx.createGain();
+  const t0 = ctx.currentTime + start;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(peak, t0 + duration * 0.15);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  src.connect(filter); filter.connect(g); g.connect(ctx.destination);
+  src.start(t0); src.stop(t0 + duration);
+}
+function playTone(ctx, freq, { start = 0, duration = 0.3, type = "sine", peak = 0.2 } = {}) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.value = freq;
+  const t0 = ctx.currentTime + start;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(peak, t0 + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t0); o.stop(t0 + duration + 0.05);
+}
+function playSweep(ctx, freqFrom, freqTo, { start = 0, duration = 0.5, type = "sawtooth", peak = 0.25 } = {}) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type;
+  const t0 = ctx.currentTime + start;
+  o.frequency.setValueAtTime(freqFrom, t0);
+  o.frequency.exponentialRampToValueAtTime(Math.max(freqTo, 1), t0 + duration);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(peak, t0 + duration * 0.3);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t0); o.stop(t0 + duration + 0.05);
+}
+
+/* ---- one distinct sound "recipe" per gift ---- */
+const GIFT_SOUNDS = {
+  rose: (ctx) => { playTone(ctx, 700, { duration: .25, peak: .16 }); playTone(ctx, 950, { start: .08, duration: .3, peak: .13 }); },
+  heart: (ctx) => { playTone(ctx, 180, { duration: .18, peak: .32 }); playTone(ctx, 150, { start: .22, duration: .22, peak: .3 }); },
+  balloon: (ctx) => { playNoiseBurst(ctx, { duration: .1, peak: .32, filterFreq: 2600, filterType: "highpass" }); playTone(ctx, 1200, { duration: .07, type: "square", peak: .15 }); },
+  choco: (ctx) => { playNoiseBurst(ctx, { duration: .08, peak: .22, filterFreq: 700, filterType: "lowpass" }); playTone(ctx, 260, { duration: .1, type: "square", peak: .13 }); },
+  ring: (ctx) => { [880, 1318, 1760].forEach((f, i) => playTone(ctx, f, { start: i * 0.03, duration: .9, peak: .11 })); },
+  diamond: (ctx) => { [1046, 1318, 1568, 2093, 2637].forEach((f, i) => playTone(ctx, f, { start: i * 0.06, duration: .35, type: "triangle", peak: .13 })); },
+  car: (ctx) => { playTone(ctx, 400, { duration: .35, type: "square", peak: .17 }); playTone(ctx, 500, { start: .05, duration: .35, type: "square", peak: .17 }); playSweep(ctx, 150, 340, { start: .42, duration: .35, peak: .18 }); },
+  crown: (ctx) => { [523, 659, 784, 1046].forEach((f, i) => playTone(ctx, f, { start: i * 0.1, duration: .4, type: "triangle", peak: .2 })); },
+  rocket: (ctx) => { playNoiseBurst(ctx, { duration: .9, peak: .22, filterFreq: 350, filterType: "lowpass" }); playSweep(ctx, 180, 1900, { duration: .9, peak: .26 }); },
+  trophy: (ctx) => {
+    [392, 523, 659, 784, 1046, 1318].forEach((f, i) => playTone(ctx, f, { start: i * 0.09, duration: .5, type: "triangle", peak: .22 }));
+    playNoiseBurst(ctx, { start: .5, duration: .6, peak: .16, filterFreq: 3200, filterType: "highpass" });
+  },
+};
+function playGiftSound(giftId, tier) {
   const ctx = getAudioCtx();
   if (!ctx) return;
-  const notesByTier = {
-    1: [880],
-    2: [660, 880],
-    3: [523, 659, 784, 1046],
-    4: [392, 523, 659, 784, 1046, 1318],
-  };
-  const notes = notesByTier[tier] || notesByTier[1];
-  notes.forEach((freq, i) => {
-    const start = ctx.currentTime + i * 0.1;
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.frequency.value = freq; o.type = tier >= 3 ? "triangle" : "sine";
-    g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(tier >= 4 ? 0.32 : 0.18, start + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, start + 0.4);
-    o.connect(g); g.connect(ctx.destination);
-    o.start(start); o.stop(start + 0.45);
-  });
+  const recipe = GIFT_SOUNDS[giftId];
+  if (recipe) { recipe(ctx); return; }
+  const notesByTier = { 1: [880], 2: [660, 880], 3: [523, 659, 784, 1046], 4: [392, 523, 659, 784, 1046, 1318] };
+  (notesByTier[tier] || notesByTier[1]).forEach((freq, i) => playTone(ctx, freq, { start: i * 0.1, duration: .4, type: tier >= 3 ? "triangle" : "sine", peak: tier >= 4 ? .3 : .16 }));
 }
 const ICE_SERVERS = [
   { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
@@ -1558,7 +1605,7 @@ function GroupChatScreen({ profile, group, onBack }) {
 function GiftAnimation({ gift, mine, senderName }) {
   const tier = giftTier(gift.cost);
   const conf = GIFT_TIER_CONF[tier];
-  useEffect(() => { playGiftSound(tier); }, [tier]);
+  useEffect(() => { playGiftSound(gift.giftId, tier); }, [gift.giftId, tier]);
   return (
     <div className={"gift-anim-overlay" + (conf.shake ? " gift-anim-shake" : "")}>
       {conf.flash && <div className={"gift-anim-flash tier-" + tier} />}
