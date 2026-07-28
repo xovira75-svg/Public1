@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 12</div></div></div>
+<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 13</div></div></div>
 
 <script>
   window.__loadFailures = [];
@@ -43,7 +43,7 @@
     } else {
       lines.push('حدث خطأ غير متوقع أثناء تشغيل التطبيق.');
     }
-    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 12</div>';
+    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 13</div>';
   }
 
   function loadScriptFallback(urls, label) {
@@ -541,12 +541,25 @@ function LoginScreen() {
   const googleSignIn = async () => {
     if (busy) return;
     setBusy(true); setError("");
+    const provider = new firebase.auth.GoogleAuthProvider();
     try {
-      await firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
-      // page will redirect to Google, then back; App() handles the result on return.
-    } catch (e) {
-      setError(mapFirebaseError(e.code) + (e.code ? " [" + e.code + "]" : ""));
+      await firebase.auth().signInWithPopup(provider);
       setBusy(false);
+      // onAuthStateChanged in App() picks this up automatically.
+    } catch (e) {
+      if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") {
+        try {
+          await firebase.auth().signInWithRedirect(provider);
+        } catch (e2) {
+          setError(mapFirebaseError(e2.code) + (e2.code ? " [" + e2.code + "]" : ""));
+          setBusy(false);
+        }
+      } else if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") {
+        setBusy(false);
+      } else {
+        setError(mapFirebaseError(e.code) + (e.code ? " [" + e.code + "]" : ""));
+        setBusy(false);
+      }
     }
   };
 
