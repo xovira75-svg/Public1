@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 8</div></div></div>
+<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 9</div></div></div>
 
 <script>
   window.__loadFailures = [];
@@ -43,7 +43,7 @@
     } else {
       lines.push('حدث خطأ غير متوقع أثناء تشغيل التطبيق.');
     }
-    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 8</div>';
+    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 9</div>';
   }
 
   function loadScriptFallback(urls, label) {
@@ -252,35 +252,55 @@ function giftTier(cost) {
   return 1;
 }
 const GIFT_TIER_CONF = {
-  1: { particles: 6, emojiSize: 68, duration: 2200, flash: false, shake: false },
-  2: { particles: 12, emojiSize: 92, duration: 2600, flash: false, shake: false },
-  3: { particles: 20, emojiSize: 124, duration: 3200, flash: true, shake: false },
-  4: { particles: 30, emojiSize: 158, duration: 4000, flash: true, shake: true },
+  1: { particles: 5, emojiSize: 58, duration: 2000, flash: false, shake: false, glow: "rgba(255,255,255,.35)" },
+  2: { particles: 14, emojiSize: 104, duration: 2700, flash: true, shake: false, glow: "rgba(34,211,238,.55)" },
+  3: { particles: 24, emojiSize: 140, duration: 3300, flash: true, shake: false, glow: "rgba(232,121,249,.65)" },
+  4: { particles: 36, emojiSize: 180, duration: 4200, flash: true, shake: true, glow: "rgba(255,201,74,.8)" },
 };
 function giftTierDuration(tier) { return GIFT_TIER_CONF[tier].duration; }
-function playGiftSound(tier) {
+/* ---- shared audio context, unlocked on first user interaction (mobile autoplay policies
+   otherwise silently block newly-created AudioContexts) ---- */
+let __sharedAudioCtx = null;
+function getAudioCtx() {
   try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new Ctx();
-    const notesByTier = {
-      1: [880],
-      2: [660, 880],
-      3: [523, 659, 784, 1046],
-      4: [392, 523, 659, 784, 1046, 1318],
-    };
-    const notes = notesByTier[tier] || notesByTier[1];
-    notes.forEach((freq, i) => {
-      const start = ctx.currentTime + i * 0.1;
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.frequency.value = freq; o.type = tier >= 3 ? "triangle" : "sine";
-      g.gain.setValueAtTime(0.0001, start);
-      g.gain.exponentialRampToValueAtTime(tier >= 4 ? 0.28 : 0.16, start + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, start + 0.4);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(start); o.stop(start + 0.45);
-    });
-    setTimeout(() => { try { ctx.close(); } catch (e) {} }, (notes.length * 0.1 + 0.6) * 1000);
-  } catch (e) {}
+    if (!__sharedAudioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      __sharedAudioCtx = new Ctx();
+    }
+    if (__sharedAudioCtx.state === "suspended") {
+      __sharedAudioCtx.resume().catch(() => {});
+    }
+    return __sharedAudioCtx;
+  } catch (e) { return null; }
+}
+if (typeof document !== "undefined") {
+  const unlockAudio = () => { getAudioCtx(); };
+  document.addEventListener("pointerdown", unlockAudio, { once: true, passive: true });
+  document.addEventListener("touchstart", unlockAudio, { once: true, passive: true });
+  document.addEventListener("keydown", unlockAudio, { once: true });
+}
+
+function playGiftSound(tier) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const notesByTier = {
+    1: [880],
+    2: [660, 880],
+    3: [523, 659, 784, 1046],
+    4: [392, 523, 659, 784, 1046, 1318],
+  };
+  const notes = notesByTier[tier] || notesByTier[1];
+  notes.forEach((freq, i) => {
+    const start = ctx.currentTime + i * 0.1;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.value = freq; o.type = tier >= 3 ? "triangle" : "sine";
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(tier >= 4 ? 0.32 : 0.18, start + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, start + 0.4);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(start); o.stop(start + 0.45);
+  });
 }
 const ICE_SERVERS = [
   { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
@@ -1543,6 +1563,13 @@ function GiftAnimation({ gift, mine, senderName }) {
     <div className={"gift-anim-overlay" + (conf.shake ? " gift-anim-shake" : "")}>
       {conf.flash && <div className={"gift-anim-flash tier-" + tier} />}
       <div className="gift-anim-burst">
+        {tier >= 4 && (
+          <div className="gift-anim-rays">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <span key={i} style={{ transform: `rotate(${i * 36}deg)` }} />
+            ))}
+          </div>
+        )}
         {Array.from({ length: conf.particles }).map((_, i) => (
           <span key={i} className="gift-anim-particle" style={{
             fontSize: Math.max(18, conf.emojiSize * 0.28),
@@ -1554,11 +1581,11 @@ function GiftAnimation({ gift, mine, senderName }) {
           }}>{gift.giftEmoji}</span>
         ))}
         <div className="gift-anim-center" style={{ animationDuration: `${conf.duration / 1000}s` }}>
-          <span className="gift-anim-emoji" style={{ fontSize: conf.emojiSize }}>{gift.giftEmoji}</span>
+          <span className="gift-anim-emoji" style={{ fontSize: conf.emojiSize, filter: `drop-shadow(0 0 ${10 + tier * 8}px ${conf.glow}) drop-shadow(0 8px 20px rgba(0,0,0,.5))` }}>{gift.giftEmoji}</span>
         </div>
       </div>
-      <div className={"gift-anim-caption" + (tier >= 3 ? " gift-anim-caption-big" : "")}>
-        {mine ? "أنت أرسلت" : `${senderName} أرسل`} {gift.giftName} {tier >= 4 ? "🎉🔥👑" : tier >= 3 ? "🎉✨" : "🎉"}
+      <div className={"gift-anim-caption" + (tier >= 3 ? " gift-anim-caption-big" : "")} style={{ boxShadow: tier >= 2 ? `0 0 24px ${conf.glow}` : "none" }}>
+        {mine ? "أنت أرسلت" : `${senderName} أرسل`} {gift.giftName} {tier >= 4 ? "🎉🔥👑" : tier >= 3 ? "🎉✨" : tier >= 2 ? "🎉💫" : "🎉"}
       </div>
     </div>
   );
@@ -1888,27 +1915,25 @@ function App() {
   }
 
   function playRingtone(freq, interval) {
-    try {
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      const ctx = new Ctx();
-      ringCtxRef.current = ctx;
-      const beep = () => {
-        if (!ringCtxRef.current) return;
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.frequency.value = freq; o.type = "sine";
-        g.gain.setValueAtTime(0.0001, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.05);
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
-        o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.4);
-      };
-      beep();
-      ringIntervalRef.current = setInterval(beep, interval);
-    } catch (e) {}
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    ringCtxRef.current = ctx;
+    const beep = () => {
+      if (!ringCtxRef.current) return;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = freq; o.type = "sine";
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+      o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.4);
+    };
+    beep();
+    ringIntervalRef.current = setInterval(beep, interval);
   }
   function stopRingtone() {
     if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
     ringIntervalRef.current = null;
-    if (ringCtxRef.current) { try { ringCtxRef.current.close(); } catch (e) {} ringCtxRef.current = null; }
+    ringCtxRef.current = null;
   }
 
   function handleRemoteTrack(e) {
@@ -2369,9 +2394,13 @@ input{font-family:inherit;}
 .gift-anim-caption{margin-top:18px; background:rgba(0,0,0,.55); color:#fff; font-weight:800; font-size:14px; padding:9px 20px; border-radius:20px; animation:fadeSlideUp .3s ease; text-shadow:0 2px 6px rgba(0,0,0,.5); position:relative; z-index:2;}
 .gift-anim-caption-big{font-size:17px; padding:11px 26px; background:rgba(0,0,0,.65); box-shadow:0 0 30px rgba(255,201,74,.5);}
 .gift-anim-flash{position:absolute; inset:0; z-index:1; animation:giftFlash 1.1s ease-out forwards;}
+.gift-anim-flash.tier-2{background:radial-gradient(circle, rgba(34,211,238,.22), transparent 65%);}
 .gift-anim-flash.tier-3{background:radial-gradient(circle, rgba(232,121,249,.35), transparent 70%);}
 .gift-anim-flash.tier-4{background:radial-gradient(circle, rgba(255,201,74,.45), rgba(232,121,249,.2) 55%, transparent 75%);}
 @keyframes giftFlash{0%{opacity:0;} 12%{opacity:1;} 100%{opacity:0;}}
+.gift-anim-rays{position:absolute; width:280px; height:280px; animation:raySpin 4s linear infinite;}
+.gift-anim-rays span{position:absolute; top:50%; left:50%; width:3px; height:140px; background:linear-gradient(rgba(255,201,74,.55), transparent); transform-origin:top center; margin-left:-1.5px;}
+@keyframes raySpin{from{transform:rotate(0deg);} to{transform:rotate(360deg);}}
 .gift-anim-shake{animation:giftShake .5s ease;}
 @keyframes giftShake{
   0%,100%{transform:translate(0,0);} 15%{transform:translate(-6px,3px);} 30%{transform:translate(6px,-3px);}
