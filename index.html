@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 7</div></div></div>
+<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 8</div></div></div>
 
 <script>
   window.__loadFailures = [];
@@ -43,7 +43,7 @@
     } else {
       lines.push('حدث خطأ غير متوقع أثناء تشغيل التطبيق.');
     }
-    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 7</div>';
+    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 8</div>';
   }
 
   function loadScriptFallback(urls, label) {
@@ -245,6 +245,43 @@ const GIFTS = [
   { id: "rocket", emoji: "🚀", name: "صاروخ", cost: 100000 },
   { id: "trophy", emoji: "🏆", name: "كأس أسطوري", cost: 250000 },
 ];
+function giftTier(cost) {
+  if (cost >= 100000) return 4;
+  if (cost >= 10000) return 3;
+  if (cost >= 1000) return 2;
+  return 1;
+}
+const GIFT_TIER_CONF = {
+  1: { particles: 6, emojiSize: 68, duration: 2200, flash: false, shake: false },
+  2: { particles: 12, emojiSize: 92, duration: 2600, flash: false, shake: false },
+  3: { particles: 20, emojiSize: 124, duration: 3200, flash: true, shake: false },
+  4: { particles: 30, emojiSize: 158, duration: 4000, flash: true, shake: true },
+};
+function giftTierDuration(tier) { return GIFT_TIER_CONF[tier].duration; }
+function playGiftSound(tier) {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const notesByTier = {
+      1: [880],
+      2: [660, 880],
+      3: [523, 659, 784, 1046],
+      4: [392, 523, 659, 784, 1046, 1318],
+    };
+    const notes = notesByTier[tier] || notesByTier[1];
+    notes.forEach((freq, i) => {
+      const start = ctx.currentTime + i * 0.1;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = freq; o.type = tier >= 3 ? "triangle" : "sine";
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.exponentialRampToValueAtTime(tier >= 4 ? 0.28 : 0.16, start + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + 0.4);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(start); o.stop(start + 0.45);
+    });
+    setTimeout(() => { try { ctx.close(); } catch (e) {} }, (notes.length * 0.1 + 0.6) * 1000);
+  } catch (e) {}
+}
 const ICE_SERVERS = [
   { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
   { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
@@ -869,6 +906,9 @@ function CreateGroupModal({ profile, onClose, onCreated }) {
   const [name, setName] = useState("");
   const [contacts, setContacts] = useState([]);
   const [selected, setSelected] = useState({});
+  const [manualMembers, setManualMembers] = useState({});
+  const [idInput, setIdInput] = useState("");
+  const [idState, setIdState] = useState("idle"); // idle | loading | notfound | self | already
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -880,8 +920,24 @@ function CreateGroupModal({ profile, onClose, onCreated }) {
 
   const toggle = (id) => setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
 
+  const addById = async () => {
+    if (idInput.length !== 6) return;
+    if (idInput === profile.id) { setIdState("self"); return; }
+    if (manualMembers[idInput] || selected[idInput]) { setIdState("already"); return; }
+    setIdState("loading");
+    const u = await sGet(`users:${idInput}`, true);
+    if (!u) { setIdState("notfound"); return; }
+    setManualMembers((prev) => ({ ...prev, [u.id]: u }));
+    setIdInput("");
+    setIdState("idle");
+  };
+
+  const removeManual = (id) => setManualMembers((prev) => { const n = { ...prev }; delete n[id]; return n; });
+
   const create = async () => {
-    const memberIds = Object.keys(selected).filter((id) => selected[id]);
+    const fromChatlist = Object.keys(selected).filter((id) => selected[id]);
+    const fromManual = Object.keys(manualMembers);
+    const memberIds = Array.from(new Set([...fromChatlist, ...fromManual]));
     if (!name.trim() || memberIds.length === 0 || busy) return;
     setBusy(true);
     const groupId = `${Date.now()}_${Math.floor(Math.random() * 9999)}`;
@@ -895,28 +951,59 @@ function CreateGroupModal({ profile, onClose, onCreated }) {
     onCreated(group);
   };
 
+  const manualList = Object.values(manualMembers);
+  const totalCount = Object.keys(selected).filter((id) => selected[id]).length + manualList.length;
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="modal-handle" />
         <div className="modal-title">إنشاء مجتمع</div>
         <input className="text-input" placeholder="اسم المجتمع" value={name} onChange={(e) => setName(e.target.value)} />
-        <label className="field-label">أضف أعضاء من محادثاتك</label>
-        {contacts.length === 0 ? (
-          <div className="search-msg">ابدأ محادثة مع أصدقائك أولًا لتضيفهم لمجتمع</div>
-        ) : (
-          <div className="member-list">
-            {contacts.map((c) => (
-              <button key={c.id} className={"member-row" + (selected[c.id] ? " member-row-active" : "")} onClick={() => toggle(c.id)}>
+
+        <label className="field-label">أضف عضو بمعرفه (٦ أرقام)</label>
+        <div className="search-row">
+          <input
+            className="text-input mono-input" inputMode="numeric" maxLength={6} placeholder="482913"
+            value={idInput}
+            onChange={(e) => { setIdInput(e.target.value.replace(/\D/g, "").slice(0, 6)); setIdState("idle"); }}
+            onKeyDown={(e) => e.key === "Enter" && addById()}
+          />
+          <button className="primary-btn small-btn" disabled={idInput.length !== 6} onClick={addById}>إضافة</button>
+        </div>
+        {idState === "loading" && <div className="search-msg" style={{ padding: "8px 0" }}><span className="spinner" /></div>}
+        {idState === "notfound" && <div className="search-msg" style={{ padding: "8px 0" }}>لا يوجد مستخدم بهذا المعرف</div>}
+        {idState === "self" && <div className="search-msg" style={{ padding: "8px 0" }}>هذا معرفك أنت 🙂</div>}
+        {idState === "already" && <div className="search-msg" style={{ padding: "8px 0" }}>مضاف بالفعل</div>}
+
+        {manualList.length > 0 && (
+          <div className="member-list" style={{ marginTop: 10 }}>
+            {manualList.map((c) => (
+              <div key={c.id} className="member-row member-row-active">
                 <Avatar name={c.name} emoji={c.emoji} color={c.color} size={38} />
                 <span className="member-row-name">{c.name}</span>
-                {selected[c.id] && <Check size={18} color="var(--accent)" />}
-              </button>
+                <button onClick={() => removeManual(c.id)}><X size={17} color="var(--text-dim)" /></button>
+              </div>
             ))}
           </div>
         )}
-        <button className="primary-btn" disabled={!name.trim() || busy} onClick={create}>
-          {busy ? <span className="spinner" /> : "إنشاء"}
+
+        {contacts.length > 0 && (
+          <>
+            <label className="field-label">أو اختر من محادثاتك</label>
+            <div className="member-list">
+              {contacts.map((c) => (
+                <button key={c.id} className={"member-row" + (selected[c.id] ? " member-row-active" : "")} onClick={() => toggle(c.id)}>
+                  <Avatar name={c.name} emoji={c.emoji} color={c.color} size={38} />
+                  <span className="member-row-name">{c.name}</span>
+                  {selected[c.id] && <Check size={18} color="var(--accent)" />}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        <button className="primary-btn" disabled={!name.trim() || totalCount === 0 || busy} onClick={create}>
+          {busy ? <span className="spinner" /> : `إنشاء (${totalCount} ${totalCount === 1 ? "عضو" : "أعضاء"})`}
         </button>
       </div>
     </div>
@@ -1034,7 +1121,7 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall, coins, onSp
     if (!next) { giftPlayingRef.current = false; setGiftAnim(null); return; }
     giftPlayingRef.current = true;
     setGiftAnim(next);
-    setTimeout(advanceGiftQueue, 2600);
+    setTimeout(advanceGiftQueue, giftTierDuration(giftTier(next.cost)));
   };
   const playGiftAnim = (gift) => {
     giftQueueRef.current.push(gift);
@@ -1278,7 +1365,7 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall, coins, onSp
       {showGifts && (
         <GiftPickerModal coins={coins} onClose={() => setShowGifts(false)} onPick={sendGift} />
       )}
-      {giftAnim && <GiftAnimation gift={giftAnim} mine={giftAnim.from === profile.id} senderName={giftAnim.from === profile.id ? profile.name : contact.name} />}
+      {giftAnim && <GiftAnimation key={giftAnim._key} gift={giftAnim} mine={giftAnim.from === profile.id} senderName={giftAnim.from === profile.id ? profile.name : contact.name} />}
     </div>
   );
 }
@@ -1449,22 +1536,30 @@ function GroupChatScreen({ profile, group, onBack }) {
 }
 
 function GiftAnimation({ gift, mine, senderName }) {
+  const tier = giftTier(gift.cost);
+  const conf = GIFT_TIER_CONF[tier];
+  useEffect(() => { playGiftSound(tier); }, [tier]);
   return (
-    <div className="gift-anim-overlay">
+    <div className={"gift-anim-overlay" + (conf.shake ? " gift-anim-shake" : "")}>
+      {conf.flash && <div className={"gift-anim-flash tier-" + tier} />}
       <div className="gift-anim-burst">
-        {Array.from({ length: 10 }).map((_, i) => (
+        {Array.from({ length: conf.particles }).map((_, i) => (
           <span key={i} className="gift-anim-particle" style={{
-            "--tx": `${(Math.random() * 2 - 1) * 140}px`,
-            "--ty": `${-(60 + Math.random() * 160)}px`,
-            "--rot": `${(Math.random() * 2 - 1) * 60}deg`,
-            animationDelay: `${i * 0.05}s`,
+            fontSize: Math.max(18, conf.emojiSize * 0.28),
+            "--tx": `${(Math.random() * 2 - 1) * (100 + tier * 40)}px`,
+            "--ty": `${-(50 + Math.random() * (100 + tier * 50))}px`,
+            "--rot": `${(Math.random() * 2 - 1) * 70}deg`,
+            animationDelay: `${i * 0.04}s`,
+            animationDuration: `${(conf.duration - 400) / 1000}s`,
           }}>{gift.giftEmoji}</span>
         ))}
-        <div className="gift-anim-center">
-          <span className="gift-anim-emoji">{gift.giftEmoji}</span>
+        <div className="gift-anim-center" style={{ animationDuration: `${conf.duration / 1000}s` }}>
+          <span className="gift-anim-emoji" style={{ fontSize: conf.emojiSize }}>{gift.giftEmoji}</span>
         </div>
       </div>
-      <div className="gift-anim-caption">{mine ? "أنت أرسلت" : `${senderName} أرسل`} {gift.giftName} 🎉</div>
+      <div className={"gift-anim-caption" + (tier >= 3 ? " gift-anim-caption-big" : "")}>
+        {mine ? "أنت أرسلت" : `${senderName} أرسل`} {gift.giftName} {tier >= 4 ? "🎉🔥👑" : tier >= 3 ? "🎉✨" : "🎉"}
+      </div>
     </div>
   );
 }
@@ -2271,7 +2366,17 @@ input{font-family:inherit;}
   15%{opacity:1;}
   100%{transform:translate(var(--tx), var(--ty)) scale(1) rotate(var(--rot)); opacity:0;}
 }
-.gift-anim-caption{margin-top:18px; background:rgba(0,0,0,.55); color:#fff; font-weight:800; font-size:14px; padding:9px 20px; border-radius:20px; animation:fadeSlideUp .3s ease; text-shadow:0 2px 6px rgba(0,0,0,.5);}
+.gift-anim-caption{margin-top:18px; background:rgba(0,0,0,.55); color:#fff; font-weight:800; font-size:14px; padding:9px 20px; border-radius:20px; animation:fadeSlideUp .3s ease; text-shadow:0 2px 6px rgba(0,0,0,.5); position:relative; z-index:2;}
+.gift-anim-caption-big{font-size:17px; padding:11px 26px; background:rgba(0,0,0,.65); box-shadow:0 0 30px rgba(255,201,74,.5);}
+.gift-anim-flash{position:absolute; inset:0; z-index:1; animation:giftFlash 1.1s ease-out forwards;}
+.gift-anim-flash.tier-3{background:radial-gradient(circle, rgba(232,121,249,.35), transparent 70%);}
+.gift-anim-flash.tier-4{background:radial-gradient(circle, rgba(255,201,74,.45), rgba(232,121,249,.2) 55%, transparent 75%);}
+@keyframes giftFlash{0%{opacity:0;} 12%{opacity:1;} 100%{opacity:0;}}
+.gift-anim-shake{animation:giftShake .5s ease;}
+@keyframes giftShake{
+  0%,100%{transform:translate(0,0);} 15%{transform:translate(-6px,3px);} 30%{transform:translate(6px,-3px);}
+  45%{transform:translate(-5px,-2px);} 60%{transform:translate(5px,3px);} 75%{transform:translate(-3px,0);} 90%{transform:translate(3px,0);}
+}
 
 .input-bar{display:flex; align-items:center; gap:10px; padding:10px 12px; border-top:1px solid var(--border); background:var(--bg-elevated); flex-shrink:0;}
 .chat-input{flex:1; background:var(--card); border:1.5px solid var(--border); border-radius:22px; padding:11px 16px; color:var(--text); font-size:14.5px; outline:none;}
