@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 13</div></div></div>
+<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 14</div></div></div>
 
 <script>
   window.__loadFailures = [];
@@ -43,7 +43,7 @@
     } else {
       lines.push('حدث خطأ غير متوقع أثناء تشغيل التطبيق.');
     }
-    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 13</div>';
+    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 14</div>';
   }
 
   function loadScriptFallback(urls, label) {
@@ -216,6 +216,8 @@ function PhoneMissed(p) { return <IconBase {...p}><line x1="23" y1="1" x2="17" y
 function PhoneIncoming(p) { return <IconBase {...p}><polyline points="16 2 16 8 22 8" /><line x1="22" y1="2" x2="16" y2="8" /><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" /></IconBase>; }
 function PhoneOutgoing(p) { return <IconBase {...p}><polyline points="16 8 22 8 22 2" /><line x1="22" y1="2" x2="16" y2="8" /><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" /></IconBase>; }
 function Coin(p) { return <IconBase {...p}><circle cx="12" cy="12" r="9" /><path d="M9.5 9.2a2.5 2 0 0 1 2.5-1.2c1.5 0 2.5.8 2.5 2 0 2.5-4 1.8-4 4.3 0 1.2 1 2 2.5 2a2.5 2 0 0 0 2.5-1.5" /><line x1="12" y1="6" x2="12" y2="18" /></IconBase>; }
+function Camera(p) { return <IconBase {...p}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></IconBase>; }
+function Pencil(p) { return <IconBase {...p}><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></IconBase>; }
 
 /* =========================================================================
    نبض — Nabd. A WhatsApp-style chat app: 6-digit ID accounts, ID-based
@@ -389,6 +391,26 @@ async function sList(prefix, shared = false) {
 }
 
 function convIdOf(a, b) { return [a, b].sort().join("-"); }
+
+async function bumpGiftStats(userId, field, amount) {
+  const key = `giftstats:${userId}`;
+  const existing = await sGet(key, true);
+  const next = { received: 0, sent: 0, ...(existing || {}) };
+  next[field] = (next[field] || 0) + amount;
+  await sSet(key, next, true);
+}
+async function computeGiftRank(userId) {
+  const keys = await sList("giftstats:", true);
+  if (!keys.length) return { rank: null, received: 0, totalRanked: 0 };
+  const docs = await Promise.all(keys.map((k) => sGet(k, true)));
+  const withReceived = docs
+    .map((d, i) => ({ id: keys[i].replace("giftstats:", ""), received: (d && d.received) || 0 }))
+    .filter((d) => d.received > 0)
+    .sort((a, b) => b.received - a.received);
+  const idx = withReceived.findIndex((d) => d.id === userId);
+  const mine = withReceived.find((d) => d.id === userId);
+  return { rank: idx >= 0 ? idx + 1 : null, received: mine ? mine.received : 0, totalRanked: withReceived.length };
+}
 function fmtTime(ts) {
   try {
     return new Date(ts).toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" });
@@ -1166,12 +1188,38 @@ function SearchModal({ profile, onClose, onFound }) {
 }
 
 /* ------------------------------ Settings screen ---------------------------- */
-function SettingsScreen({ profile, authEmail, onBack, onSignOut, onToast }) {
+const NAME_COOLDOWN_MS = 7 * 24 * 3600 * 1000;
+
+function rankBadgeStyle(rank) {
+  if (rank === 1) return { grad: ["#FFD54A", "#B8860B"], label: "🥇 المرتبة #1" };
+  if (rank === 2) return { grad: ["#E0E0E0", "#9E9E9E"], label: "🥈 المرتبة #2" };
+  if (rank === 3) return { grad: ["#E8A96B", "#8B5A2B"], label: "🥉 المرتبة #3" };
+  if (rank && rank <= 100) return { grad: ["#17E9A5", "#0B8F68"], label: `🏅 المرتبة #${rank}` };
+  return null;
+}
+
+function SettingsScreen({ profile, authEmail, onBack, onSignOut, onToast, onUpdateProfile }) {
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [editingAvatar, setEditingAvatar] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [rankInfo, setRankInfo] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    computeGiftRank(profile.id).then((r) => { if (!cancelled) setRankInfo(r); });
+    return () => { cancelled = true; };
+  }, [profile.id]);
+
   const copyId = async () => {
     try { await navigator.clipboard.writeText(profile.id); onToast("تم نسخ المعرف ✓"); }
     catch (e) { onToast("تعذر النسخ"); }
   };
-  const [confirmDel, setConfirmDel] = useState(false);
+
+  const badge = rankInfo && rankInfo.rank ? rankBadgeStyle(rankInfo.rank) : null;
+  const nextNameChangeAt = profile.lastNameChangeAt ? profile.lastNameChangeAt + NAME_COOLDOWN_MS : 0;
+  const canChangeName = !profile.lastNameChangeAt || Date.now() >= nextNameChangeAt;
+  const daysLeft = canChangeName ? 0 : Math.ceil((nextNameChangeAt - Date.now()) / (24 * 3600 * 1000));
+
   return (
     <div className="screen">
       <div className="top-bar">
@@ -1180,8 +1228,24 @@ function SettingsScreen({ profile, authEmail, onBack, onSignOut, onToast }) {
         <div style={{ width: 38 }} />
       </div>
       <div className="settings-body">
-        <div className="settings-avatar"><Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={100} /></div>
-        <div className="settings-name">{profile.name}</div>
+        <button className="settings-avatar-wrap" onClick={() => setEditingAvatar(true)}>
+          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={100} />
+          <span className="avatar-edit-badge"><Camera size={15} color="#07130F" /></span>
+        </button>
+
+        <button className="settings-name-row" onClick={() => setEditingName(true)}>
+          <span className="settings-name">{profile.name}</span>
+          <Pencil size={14} color="var(--text-dim)" />
+        </button>
+
+        {badge ? (
+          <div className="rank-badge" style={{ background: `linear-gradient(135deg, ${badge.grad[0]}, ${badge.grad[1]})` }}>
+            {badge.label} <span className="rank-badge-sub">· {rankInfo.received.toLocaleString()} عملة هدايا</span>
+          </div>
+        ) : (
+          <div className="rank-badge rank-badge-none">لسا ما وصلتك هدايا — أرسل أو استقبل لتدخل الترتيب</div>
+        )}
+
         {authEmail && <div className="settings-email">{authEmail}</div>}
         <button className="id-badge id-badge-click" onClick={copyId}>
           <span className="id-badge-label">معرفك — اضغط للنسخ</span>
@@ -1202,6 +1266,72 @@ function SettingsScreen({ profile, authEmail, onBack, onSignOut, onToast }) {
               <button className="secondary-btn" onClick={() => setConfirmDel(false)}>تراجع</button>
               <button className="danger-btn" onClick={onSignOut}><LogOut size={16} /> تسجيل الخروج</button>
             </div>
+          </div>
+        )}
+      </div>
+
+      {editingAvatar && (
+        <AvatarEditModal profile={profile} onClose={() => setEditingAvatar(false)}
+          onSave={async (patch) => { await onUpdateProfile(patch); setEditingAvatar(false); onToast("تم تحديث الصورة ✓"); }} />
+      )}
+      {editingName && (
+        <NameEditModal profile={profile} canChange={canChangeName} daysLeft={daysLeft} onClose={() => setEditingName(false)}
+          onSave={async (name) => { await onUpdateProfile({ name, lastNameChangeAt: Date.now() }); setEditingName(false); onToast("تم تحديث الاسم ✓"); }} />
+      )}
+    </div>
+  );
+}
+
+function AvatarEditModal({ profile, onClose, onSave }) {
+  const [color, setColor] = useState(profile.color);
+  const [emoji, setEmoji] = useState(profile.emoji);
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle" />
+        <div className="modal-title">تعديل الصورة</div>
+        <div className="avatar-preview"><Avatar name={profile.name} emoji={emoji} color={color} size={84} /></div>
+        <label className="field-label">لون الحساب</label>
+        <div className="swatch-row">
+          {AVATAR_COLORS.map((c) => (
+            <button key={c.id} onClick={() => setColor(c.id)} className={"swatch" + (color === c.id ? " swatch-active" : "")}
+              style={{ background: `linear-gradient(135deg, ${c.grad[0]}, ${c.grad[1]})` }} />
+          ))}
+        </div>
+        <label className="field-label">الرمز التعبيري</label>
+        <div className="emoji-row">
+          {EMOJIS.map((e) => (
+            <button key={e} onClick={() => setEmoji(e)} className={"emoji-btn" + (emoji === e ? " emoji-active" : "")}>{e}</button>
+          ))}
+        </div>
+        <button className="primary-btn" disabled={busy} onClick={async () => { setBusy(true); await onSave({ color, emoji }); }}>
+          {busy ? <span className="spinner" /> : "حفظ"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function NameEditModal({ profile, canChange, daysLeft, onClose, onSave }) {
+  const [name, setName] = useState(profile.name);
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle" />
+        <div className="modal-title">تعديل الاسم</div>
+        {canChange ? (
+          <>
+            <input className="text-input" value={name} maxLength={24} onChange={(e) => setName(e.target.value)} autoFocus />
+            <div className="auth-foot">تقدر تغيّر اسمك مرة كل ٧ أيام فقط.</div>
+            <button className="primary-btn" disabled={!name.trim() || busy} onClick={async () => { setBusy(true); await onSave(name.trim()); }}>
+              {busy ? <span className="spinner" /> : "حفظ"}
+            </button>
+          </>
+        ) : (
+          <div className="search-msg" style={{ padding: "18px 0" }}>
+            تقدر تغيّر اسمك بعد {daysLeft} {daysLeft === 1 ? "يوم" : "أيام"}
           </div>
         )}
       </div>
@@ -1318,7 +1448,11 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall, coins, onSp
         otherColor: profile.color, preview, ts, fromId: profile.id,
       }, true);
       onSent(contact, preview, ts);
-      if (payload.type === "gift") playGiftAnim(msg);
+      if (payload.type === "gift") {
+        playGiftAnim(msg);
+        bumpGiftStats(contact.id, "received", payload.cost);
+        bumpGiftStats(profile.id, "sent", payload.cost);
+      }
     } finally {
       sendingRef.current = false;
     }
@@ -1931,6 +2065,13 @@ function App() {
     return true;
   };
 
+  const updateProfile = async (patch) => {
+    const updated = { ...profile, ...patch };
+    setProfile(updated);
+    await sSet("profile", updated, false);
+    await sSet(`users:${profile.id}`, { id: profile.id, name: updated.name, color: updated.color, emoji: updated.emoji, lastSeen: Date.now() }, true);
+  };
+
   const handleSignOut = async () => {
     await firebase.auth().signOut();
   };
@@ -2256,7 +2397,7 @@ function App() {
           <GroupChatScreen profile={profile} group={activeGroup} onBack={() => setView("home")} />
         )}
         {profile && view === "settings" && (
-          <SettingsScreen profile={profile} authEmail={authUser && authUser.email} onBack={() => setView("home")} onSignOut={handleSignOut} onToast={showToast} />
+          <SettingsScreen profile={profile} authEmail={authUser && authUser.email} onBack={() => setView("home")} onSignOut={handleSignOut} onToast={showToast} onUpdateProfile={updateProfile} />
         )}
 
         {showSearch && profile && (
@@ -2412,7 +2553,13 @@ input{font-family:inherit;}
 /* ---------- settings ---------- */
 .settings-body{flex:1; display:flex; flex-direction:column; align-items:center; padding:34px 24px;}
 .settings-avatar{margin-bottom:16px;}
-.settings-name{font-weight:800; font-size:19px; margin-bottom:14px;}
+.settings-avatar-wrap{position:relative; margin-bottom:14px; border-radius:50%;}
+.avatar-edit-badge{position:absolute; bottom:2px; inset-inline-end:2px; width:30px; height:30px; border-radius:50%; background:var(--accent); border:3px solid var(--bg); display:flex; align-items:center; justify-content:center;}
+.settings-name-row{display:flex; align-items:center; gap:7px; margin-bottom:12px;}
+.settings-name{font-weight:800; font-size:19px;}
+.rank-badge{display:flex; align-items:center; gap:6px; color:#07130F; font-weight:800; font-size:12.5px; padding:8px 16px; border-radius:20px; margin-bottom:14px; flex-wrap:wrap; justify-content:center;}
+.rank-badge-sub{font-weight:600; font-size:11px; opacity:.75;}
+.rank-badge-none{background:var(--card); color:var(--text-dim); font-weight:600; border:1px solid var(--border); text-align:center; font-size:12px;}
 .settings-divider{width:100%; height:1px; background:var(--border); margin:26px 0;}
 .danger-ghost-btn{display:flex; align-items:center; gap:8px; color:var(--danger); font-weight:700; font-size:14px; padding:10px 16px;}
 .confirm-box{width:100%; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; text-align:center;}
