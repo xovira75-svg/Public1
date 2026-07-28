@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 14</div></div></div>
+<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 15</div></div></div>
 
 <script>
   window.__loadFailures = [];
@@ -43,7 +43,7 @@
     } else {
       lines.push('حدث خطأ غير متوقع أثناء تشغيل التطبيق.');
     }
-    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 14</div>';
+    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 15</div>';
   }
 
   function loadScriptFallback(urls, label) {
@@ -696,7 +696,7 @@ function ProfileSetupScreen({ onCreate }) {
 }
 
 /* ------------------------------- Home screen ------------------------------ */
-function HomeScreen({ profile, chatlist, onOpenChat, onOpenSearch, onOpenSettings }) {
+function HomeScreen({ profile, chatlist, onOpenChat, onOpenSearch, onOpenSettings, onOpenLeaderboard }) {
   const contacts = Object.values(chatlist || {}).sort((a, b) => b.ts - a.ts);
   return (
     <div className="screen">
@@ -707,6 +707,7 @@ function HomeScreen({ profile, chatlist, onOpenChat, onOpenSearch, onOpenSetting
         <div className="top-title">
           <PulseMark size={18} />
           <span>نبض</span>
+          <button className="leaderboard-trigger" onClick={onOpenLeaderboard} aria-label="الترتيب">🏆</button>
         </div>
         <button className="icon-btn" onClick={onOpenSearch}><Search size={22} color="var(--text)" /></button>
       </div>
@@ -1198,7 +1199,7 @@ function rankBadgeStyle(rank) {
   return null;
 }
 
-function SettingsScreen({ profile, authEmail, onBack, onSignOut, onToast, onUpdateProfile }) {
+function SettingsScreen({ profile, authEmail, onBack, onSignOut, onToast, onUpdateProfile, onOpenLeaderboard }) {
   const [confirmDel, setConfirmDel] = useState(false);
   const [editingAvatar, setEditingAvatar] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -1239,11 +1240,11 @@ function SettingsScreen({ profile, authEmail, onBack, onSignOut, onToast, onUpda
         </button>
 
         {badge ? (
-          <div className="rank-badge" style={{ background: `linear-gradient(135deg, ${badge.grad[0]}, ${badge.grad[1]})` }}>
+          <button className="rank-badge" onClick={onOpenLeaderboard} style={{ background: `linear-gradient(135deg, ${badge.grad[0]}, ${badge.grad[1]})` }}>
             {badge.label} <span className="rank-badge-sub">· {rankInfo.received.toLocaleString()} عملة هدايا</span>
-          </div>
+          </button>
         ) : (
-          <div className="rank-badge rank-badge-none">لسا ما وصلتك هدايا — أرسل أو استقبل لتدخل الترتيب</div>
+          <button className="rank-badge rank-badge-none" onClick={onOpenLeaderboard}>لسا ما وصلتك هدايا — أرسل أو استقبل لتدخل الترتيب</button>
         )}
 
         {authEmail && <div className="settings-email">{authEmail}</div>}
@@ -1335,6 +1336,72 @@ function NameEditModal({ profile, canChange, daysLeft, onClose, onSave }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------ leaderboard screen ------------------------------ */
+function LeaderboardScreen({ profile, onBack }) {
+  const [rows, setRows] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const keys = await sList("giftstats:", true);
+      const docs = await Promise.all(keys.map((k) => sGet(k, true)));
+      const withReceived = docs
+        .map((d, i) => ({ id: keys[i].replace("giftstats:", ""), received: (d && d.received) || 0 }))
+        .filter((d) => d.received > 0)
+        .sort((a, b) => b.received - a.received)
+        .slice(0, 100);
+      const users = await Promise.all(withReceived.map((d) => sGet(`users:${d.id}`, true)));
+      const merged = withReceived.map((d, i) => ({ ...d, user: users[i] || {} }));
+      if (!cancelled) setRows(merged);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <div className="screen">
+      <div className="top-bar">
+        <button className="icon-btn" onClick={onBack}><ArrowRight size={22} color="var(--text)" /></button>
+        <div className="top-title"><span>🏆 الأكثر تصنيفًا</span></div>
+        <div style={{ width: 38 }} />
+      </div>
+
+      {rows === null ? (
+        <div className="empty-state"><span className="spinner" /></div>
+      ) : rows.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-pulse" style={{ fontSize: 40 }}>🏆</div>
+          <div className="empty-title">لا أحد بالترتيب بعد</div>
+          <div className="empty-sub">أول من يستقبل هدية بيتصدّر القائمة!</div>
+        </div>
+      ) : (
+        <div className="chat-list">
+          {rows.map((r, i) => {
+            const rank = i + 1;
+            const badge = rankBadgeStyle(rank);
+            const isMe = r.id === profile.id;
+            return (
+              <div key={r.id} className={"chat-row leaderboard-row" + (isMe ? " leaderboard-row-me" : "")}>
+                <span className="leaderboard-rank" style={badge ? { background: `linear-gradient(135deg, ${badge.grad[0]}, ${badge.grad[1]})`, color: "#07130F" } : {}}>
+                  {rank <= 3 ? (rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉") : `#${rank}`}
+                </span>
+                <Avatar name={r.user.name || "؟"} emoji={r.user.emoji} color={r.user.color} size={46} />
+                <div className="chat-row-mid">
+                  <div className="chat-row-top">
+                    <span className="chat-row-name">{r.user.name || "مستخدم"}{isMe ? " (أنت)" : ""}</span>
+                  </div>
+                  <div className="chat-row-bottom">
+                    <span className="chat-row-preview"><Coin size={11} color="#FFC94A" /> {r.received.toLocaleString()} عملة هدايا</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -2378,6 +2445,7 @@ function App() {
               onOpenChat: openChat,
               onOpenSearch: () => setShowSearch(true),
               onOpenSettings: () => setView("settings"),
+              onOpenLeaderboard: () => setView("leaderboard"),
             }}
             updatesProps={{ profile, chatlist, onOpenSettings: () => setView("settings") }}
             communitiesProps={{ profile, onOpenGroup: openGroup, onOpenSettings: () => setView("settings") }}
@@ -2397,7 +2465,10 @@ function App() {
           <GroupChatScreen profile={profile} group={activeGroup} onBack={() => setView("home")} />
         )}
         {profile && view === "settings" && (
-          <SettingsScreen profile={profile} authEmail={authUser && authUser.email} onBack={() => setView("home")} onSignOut={handleSignOut} onToast={showToast} onUpdateProfile={updateProfile} />
+          <SettingsScreen profile={profile} authEmail={authUser && authUser.email} onBack={() => setView("home")} onSignOut={handleSignOut} onToast={showToast} onUpdateProfile={updateProfile} onOpenLeaderboard={() => setView("leaderboard")} />
+        )}
+        {profile && view === "leaderboard" && (
+          <LeaderboardScreen profile={profile} onBack={() => setView("home")} />
         )}
 
         {showSearch && profile && (
@@ -2508,6 +2579,11 @@ input{font-family:inherit;}
 @keyframes fadeSlideUp{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
 .top-bar{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border); background:var(--bg-elevated); flex-shrink:0;}
 .top-title{flex:1; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:800; font-size:17px;}
+.leaderboard-trigger{font-size:16px; line-height:1; padding:4px; border-radius:8px; transition:transform .15s;}
+.leaderboard-trigger:active{transform:scale(1.2);}
+.leaderboard-row{gap:11px;}
+.leaderboard-rank{min-width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:10px; font-weight:800; font-size:13px; color:var(--text-dim); background:var(--card); flex-shrink:0;}
+.leaderboard-row-me{background:rgba(23,233,165,.06);}
 .icon-btn{width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:background .15s; flex-shrink:0;}
 .icon-btn:hover{background:var(--card-hover);}
 
