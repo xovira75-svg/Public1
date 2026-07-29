@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 15</div></div></div>
+<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 16</div></div></div>
 
 <script>
   window.__loadFailures = [];
@@ -43,7 +43,7 @@
     } else {
       lines.push('حدث خطأ غير متوقع أثناء تشغيل التطبيق.');
     }
-    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 15</div>';
+    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 16</div>';
   }
 
   function loadScriptFallback(urls, label) {
@@ -392,6 +392,31 @@ async function sList(prefix, shared = false) {
 
 function convIdOf(a, b) { return [a, b].sort().join("-"); }
 
+function resizeImageFile(file, targetSize = 256) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = targetSize; canvas.height = targetSize;
+          const ctx = canvas.getContext("2d");
+          const scale = Math.max(targetSize / img.width, targetSize / img.height);
+          const w = img.width * scale, h = img.height * scale;
+          const x = (targetSize - w) / 2, y = (targetSize - h) / 2;
+          ctx.drawImage(img, x, y, w, h);
+          resolve(canvas.toDataURL("image/jpeg", 0.82));
+        } catch (err) { reject(err); }
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 async function bumpGiftStats(userId, field, amount) {
   const key = `giftstats:${userId}`;
   const existing = await sGet(key, true);
@@ -451,21 +476,32 @@ function waitIceGathering(pc) {
 }
 
 /* --------------------------------- Avatar -------------------------------- */
-function Avatar({ name, emoji, color, size = 44, online }) {
+function Avatar({ name, emoji, color, photo, size = 44, online }) {
   const grad = AVATAR_COLORS.find((c) => c.id === color) || AVATAR_COLORS[0];
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
-      <div
-        style={{
-          width: size, height: size, borderRadius: "50%",
-          background: `linear-gradient(135deg, ${grad.grad[0]}, ${grad.grad[1]})`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: size * 0.48, boxShadow: "0 4px 14px rgba(0,0,0,.35)",
-          border: "1.5px solid rgba(255,255,255,.08)",
-        }}
-      >
-        {emoji || (name ? name.trim()[0] : "?")}
-      </div>
+      {photo ? (
+        <img
+          src={photo} alt={name || ""}
+          style={{
+            width: size, height: size, borderRadius: "50%", objectFit: "cover",
+            boxShadow: "0 4px 14px rgba(0,0,0,.35)", border: "1.5px solid rgba(255,255,255,.08)",
+            display: "block",
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            width: size, height: size, borderRadius: "50%",
+            background: `linear-gradient(135deg, ${grad.grad[0]}, ${grad.grad[1]})`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: size * 0.48, boxShadow: "0 4px 14px rgba(0,0,0,.35)",
+            border: "1.5px solid rgba(255,255,255,.08)",
+          }}
+        >
+          {emoji || (name ? name.trim()[0] : "?")}
+        </div>
+      )}
       {online !== undefined && (
         <span
           style={{
@@ -702,13 +738,16 @@ function HomeScreen({ profile, chatlist, onOpenChat, onOpenSearch, onOpenSetting
     <div className="screen">
       <div className="top-bar">
         <button className="icon-btn" onClick={onOpenSettings}>
-          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={34} />
+          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} photo={profile.photo} size={34} />
         </button>
         <div className="top-title">
           <PulseMark size={18} />
           <span>نبض</span>
-          <button className="leaderboard-trigger" onClick={onOpenLeaderboard} aria-label="الترتيب">🏆</button>
         </div>
+        <button className="popularity-trigger" onClick={onOpenLeaderboard}>
+          <span className="popularity-emoji">🏆</span>
+          <span className="popularity-label">الشعبية</span>
+        </button>
         <button className="icon-btn" onClick={onOpenSearch}><Search size={22} color="var(--text)" /></button>
       </div>
 
@@ -729,7 +768,7 @@ function HomeScreen({ profile, chatlist, onOpenChat, onOpenSearch, onOpenSetting
         <div className="chat-list">
           {contacts.map((c) => (
             <button key={c.id} className="chat-row" onClick={() => onOpenChat(c)}>
-              <Avatar name={c.name} emoji={c.emoji} color={c.color} size={50} />
+              <Avatar name={c.name} emoji={c.emoji} color={c.color} photo={c.photo} size={50} />
               <div className="chat-row-mid">
                 <div className="chat-row-top">
                   <span className="chat-row-name">{c.name}</span>
@@ -815,7 +854,7 @@ function CallsScreen({ profile, onCall, onOpenSettings }) {
     <div className="screen">
       <div className="top-bar">
         <button className="icon-btn" onClick={onOpenSettings}>
-          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={34} />
+          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} photo={profile.photo} size={34} />
         </button>
         <div className="top-title"><span>المكالمات</span></div>
         <div style={{ width: 38 }} />
@@ -835,7 +874,7 @@ function CallsScreen({ profile, onCall, onOpenSettings }) {
             const missed = e.outcome === "missed" || (e.outcome === "declined" && e.direction === "incoming");
             return (
               <button key={i} className="chat-row" onClick={() => onCall({ id: e.contactId, name: e.contactName, emoji: e.contactEmoji, color: e.contactColor }, e.type)}>
-                <Avatar name={e.contactName} emoji={e.contactEmoji} color={e.contactColor} size={50} />
+                <Avatar name={e.contactName} emoji={e.contactEmoji} color={e.contactColor} photo={e.contactPhoto} size={50} />
                 <div className="chat-row-mid">
                   <div className="chat-row-top">
                     <span className="chat-row-name" style={missed ? { color: "var(--danger)" } : {}}>{e.contactName}</span>
@@ -884,7 +923,7 @@ function UpdatesScreen({ profile, chatlist, onOpenSettings }) {
 
   const postStatus = async (text, bg) => {
     const ts = Date.now();
-    const s = { userId: profile.id, name: profile.name, emoji: profile.emoji, color: profile.color, text, bg, ts, expiresAt: ts + 24 * 3600 * 1000 };
+    const s = { userId: profile.id, name: profile.name, emoji: profile.emoji, color: profile.color, photo: profile.photo || null, text, bg, ts, expiresAt: ts + 24 * 3600 * 1000 };
     await sSet(`status:${profile.id}`, s, true);
     setMyStatus(s);
     setComposing(false);
@@ -899,7 +938,7 @@ function UpdatesScreen({ profile, chatlist, onOpenSettings }) {
     <div className="screen">
       <div className="top-bar">
         <button className="icon-btn" onClick={onOpenSettings}>
-          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={34} />
+          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} photo={profile.photo} size={34} />
         </button>
         <div className="top-title"><span>التحديثات</span></div>
         <div style={{ width: 38 }} />
@@ -908,7 +947,7 @@ function UpdatesScreen({ profile, chatlist, onOpenSettings }) {
       <div className="chat-list">
         <button className="chat-row" onClick={() => (myStatus ? setViewing(myStatus) : setComposing(true))}>
           <div style={{ position: "relative" }}>
-            <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={50} />
+            <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} photo={profile.photo} size={50} />
             {!myStatus && (
               <span className="status-add-badge"><Plus size={12} color="#07130F" /></span>
             )}
@@ -922,7 +961,7 @@ function UpdatesScreen({ profile, chatlist, onOpenSettings }) {
         {friendStatuses.length > 0 && <div className="status-section-label">تحديثات جديدة</div>}
         {friendStatuses.map((s) => (
           <button key={s.userId} className="chat-row" onClick={() => setViewing(s)}>
-            <span className="status-ring"><Avatar name={s.name} emoji={s.emoji} color={s.color} size={46} /></span>
+            <span className="status-ring"><Avatar name={s.name} emoji={s.emoji} color={s.color} photo={s.photo} size={46} /></span>
             <div className="chat-row-mid">
               <div className="chat-row-top"><span className="chat-row-name">{s.name}</span><span className="chat-row-time">{fmtTime(s.ts)}</span></div>
               <div className="chat-row-bottom"><span className="chat-row-preview">{s.text}</span></div>
@@ -969,7 +1008,7 @@ function StatusViewer({ status, mine, onDelete, onClose }) {
     <div className="status-viewer" style={{ background: status.bg }} onClick={onClose}>
       <div className="status-viewer-progress"><span /></div>
       <div className="status-viewer-header">
-        <Avatar name={status.name} emoji={status.emoji} color={status.color} size={34} />
+        <Avatar name={status.name} emoji={status.emoji} color={status.color} photo={status.photo} size={34} />
         <span className="status-viewer-name">{status.name}</span>
         <span className="status-viewer-time">{fmtTime(status.ts)}</span>
       </div>
@@ -1001,7 +1040,7 @@ function CommunitiesScreen({ profile, onOpenGroup, onOpenSettings }) {
     <div className="screen">
       <div className="top-bar">
         <button className="icon-btn" onClick={onOpenSettings}>
-          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={34} />
+          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} photo={profile.photo} size={34} />
         </button>
         <div className="top-title"><span>المجتمعات</span></div>
         <div style={{ width: 38 }} />
@@ -1112,7 +1151,7 @@ function CreateGroupModal({ profile, onClose, onCreated }) {
           <div className="member-list" style={{ marginTop: 10 }}>
             {manualList.map((c) => (
               <div key={c.id} className="member-row member-row-active">
-                <Avatar name={c.name} emoji={c.emoji} color={c.color} size={38} />
+                <Avatar name={c.name} emoji={c.emoji} color={c.color} photo={c.photo} size={38} />
                 <span className="member-row-name">{c.name}</span>
                 <button onClick={() => removeManual(c.id)}><X size={17} color="var(--text-dim)" /></button>
               </div>
@@ -1126,7 +1165,7 @@ function CreateGroupModal({ profile, onClose, onCreated }) {
             <div className="member-list">
               {contacts.map((c) => (
                 <button key={c.id} className={"member-row" + (selected[c.id] ? " member-row-active" : "")} onClick={() => toggle(c.id)}>
-                  <Avatar name={c.name} emoji={c.emoji} color={c.color} size={38} />
+                  <Avatar name={c.name} emoji={c.emoji} color={c.color} photo={c.photo} size={38} />
                   <span className="member-row-name">{c.name}</span>
                   {selected[c.id] && <Check size={18} color="var(--accent)" />}
                 </button>
@@ -1177,7 +1216,7 @@ function SearchModal({ profile, onClose, onFound }) {
         {state === "self" && <div className="search-msg">هذا معرفك أنت 🙂</div>}
         {state === "found" && result && (
           <div className="found-card">
-            <Avatar name={result.name} emoji={result.emoji} color={result.color} size={64} />
+            <Avatar name={result.name} emoji={result.emoji} color={result.color} photo={result.photo} size={64} />
             <div className="found-name">{result.name}</div>
             <div className="id-mono found-id">{result.id}</div>
             <button className="primary-btn" onClick={() => onFound(result)}>بدء محادثة</button>
@@ -1230,7 +1269,7 @@ function SettingsScreen({ profile, authEmail, onBack, onSignOut, onToast, onUpda
       </div>
       <div className="settings-body">
         <button className="settings-avatar-wrap" onClick={() => setEditingAvatar(true)}>
-          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} size={100} />
+          <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} photo={profile.photo} size={100} />
           <span className="avatar-edit-badge"><Camera size={15} color="#07130F" /></span>
         </button>
 
@@ -1284,29 +1323,51 @@ function SettingsScreen({ profile, authEmail, onBack, onSignOut, onToast, onUpda
 }
 
 function AvatarEditModal({ profile, onClose, onSave }) {
-  const [color, setColor] = useState(profile.color);
-  const [emoji, setEmoji] = useState(profile.emoji);
+  const [photo, setPhoto] = useState(profile.photo || null);
   const [busy, setBusy] = useState(false);
+  const [loadingPhoto, setLoadingPhoto] = useState(false);
+  const fileRef = useRef(null);
+
+  const pickPhoto = () => fileRef.current && fileRef.current.click();
+  const onFileChange = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setLoadingPhoto(true);
+    try {
+      const dataUrl = await resizeImageFile(file, 300);
+      setPhoto(dataUrl);
+    } catch (err) {}
+    setLoadingPhoto(false);
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="modal-handle" />
         <div className="modal-title">تعديل الصورة</div>
-        <div className="avatar-preview"><Avatar name={profile.name} emoji={emoji} color={color} size={84} /></div>
-        <label className="field-label">لون الحساب</label>
-        <div className="swatch-row">
-          {AVATAR_COLORS.map((c) => (
-            <button key={c.id} onClick={() => setColor(c.id)} className={"swatch" + (color === c.id ? " swatch-active" : "")}
-              style={{ background: `linear-gradient(135deg, ${c.grad[0]}, ${c.grad[1]})` }} />
-          ))}
-        </div>
-        <label className="field-label">الرمز التعبيري</label>
-        <div className="emoji-row">
-          {EMOJIS.map((e) => (
-            <button key={e} onClick={() => setEmoji(e)} className={"emoji-btn" + (emoji === e ? " emoji-active" : "")}>{e}</button>
-          ))}
-        </div>
-        <button className="primary-btn" disabled={busy} onClick={async () => { setBusy(true); await onSave({ color, emoji }); }}>
+
+        <button className="photo-picker-preview" onClick={pickPhoto}>
+          {loadingPhoto ? (
+            <span className="spinner" />
+          ) : (
+            <Avatar name={profile.name} emoji={profile.emoji} color={profile.color} photo={photo} size={110} />
+          )}
+          <span className="photo-picker-badge"><Camera size={17} color="#07130F" /></span>
+        </button>
+
+        <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onFileChange} />
+
+        <button className="secondary-btn photo-picker-btn" onClick={pickPhoto}>
+          <Camera size={17} /> اختر صورة من المعرض
+        </button>
+        {photo && (
+          <button className="danger-ghost-btn" style={{ margin: "10px auto 0" }} onClick={() => setPhoto(null)}>
+            <Trash2 size={15} /> إزالة الصورة
+          </button>
+        )}
+
+        <button className="primary-btn" disabled={busy} onClick={async () => { setBusy(true); await onSave({ photo }); }}>
           {busy ? <span className="spinner" /> : "حفظ"}
         </button>
       </div>
@@ -1388,7 +1449,7 @@ function LeaderboardScreen({ profile, onBack }) {
                 <span className="leaderboard-rank" style={badge ? { background: `linear-gradient(135deg, ${badge.grad[0]}, ${badge.grad[1]})`, color: "#07130F" } : {}}>
                   {rank <= 3 ? (rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉") : `#${rank}`}
                 </span>
-                <Avatar name={r.user.name || "؟"} emoji={r.user.emoji} color={r.user.color} size={46} />
+                <Avatar name={r.user.name || "؟"} emoji={r.user.emoji} color={r.user.color} photo={r.user.photo} size={46} />
                 <div className="chat-row-mid">
                   <div className="chat-row-top">
                     <span className="chat-row-name">{r.user.name || "مستخدم"}{isMe ? " (أنت)" : ""}</span>
@@ -1512,7 +1573,7 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall, coins, onSp
       const preview = payload.type === "voice" ? "🎤 رسالة صوتية" : payload.type === "gift" ? `🎁 ${payload.giftEmoji} هدية` : payload.text;
       await sSet(`lastmsg:${contact.id}:${convId}`, {
         convId, otherId: profile.id, otherName: profile.name, otherEmoji: profile.emoji,
-        otherColor: profile.color, preview, ts, fromId: profile.id,
+        otherColor: profile.color, otherPhoto: profile.photo || null, preview, ts, fromId: profile.id,
       }, true);
       onSent(contact, preview, ts);
       if (payload.type === "gift") {
@@ -1595,7 +1656,7 @@ function ChatScreen({ profile, contact, onBack, onSent, onStartCall, coins, onSp
     <div className="screen">
       <div className="top-bar chat-top">
         <button className="icon-btn" onClick={onBack}><ArrowRight size={22} color="var(--text)" /></button>
-        <Avatar name={contact.name} emoji={contact.emoji} color={contact.color} size={38} online={otherOnline} />
+        <Avatar name={contact.name} emoji={contact.emoji} color={contact.color} photo={contact.photo} size={38} online={otherOnline} />
         <div className="chat-top-mid">
           <div className="chat-top-name">{contact.name}</div>
           <div className="chat-top-status">{otherTyping ? "يكتب الآن…" : otherOnline ? "متصل الآن" : "غير متصل"}</div>
@@ -1853,11 +1914,11 @@ function GiftAnimation({ gift, mine, sender, receiver }) {
       {conf.flash && <div className={"gift-anim-flash tier-" + tier} />}
 
       <div className={"gift-anim-banner tier-" + tier}>
-        <Avatar name={sender.name} emoji={sender.emoji} color={sender.color} size={34} />
+        <Avatar name={sender.name} emoji={sender.emoji} color={sender.color} photo={sender.photo} size={34} />
         <span className="gift-anim-banner-arrow">➜</span>
         <span className="gift-anim-banner-gift">{gift.giftEmoji}</span>
         <span className="gift-anim-banner-arrow">➜</span>
-        <Avatar name={receiver.name} emoji={receiver.emoji} color={receiver.color} size={34} />
+        <Avatar name={receiver.name} emoji={receiver.emoji} color={receiver.color} photo={receiver.photo} size={34} />
         {tier >= 4 && <span className="gift-anim-ribbon">🔥 أسطوري 🔥</span>}
       </div>
 
@@ -1967,7 +2028,7 @@ function IncomingCallOverlay({ call, onAccept, onDecline }) {
         <div className="call-label">{call.type === "video" ? "مكالمة فيديو واردة" : "مكالمة صوتية واردة"}</div>
         <div className="ring-wrap">
           <span className="ring r1" /><span className="ring r2" /><span className="ring r3" />
-          <Avatar name={call.callerName} emoji={call.callerEmoji} color={call.callerColor} size={116} />
+          <Avatar name={call.callerName} emoji={call.callerEmoji} color={call.callerColor} photo={call.callerPhoto} size={116} />
         </div>
         <div className="call-name">{call.callerName}</div>
         <div className="call-sub">يتصل بك الآن…</div>
@@ -2018,7 +2079,7 @@ function CallScreen({ call, localVideoRef, remoteVideoRef, onHangup, onToggleMut
                   {Array.from({ length: 5 }).map((_, i) => <span key={i} style={{ animationDelay: `${i * 0.12}s` }} />)}
                 </div>
               )}
-              <Avatar name={call.contact.name} emoji={call.contact.emoji} color={call.contact.color} size={116} />
+              <Avatar name={call.contact.name} emoji={call.contact.emoji} color={call.contact.color} photo={call.contact.photo} size={116} />
             </div>
           </>
         )}
@@ -2136,7 +2197,7 @@ function App() {
     const updated = { ...profile, ...patch };
     setProfile(updated);
     await sSet("profile", updated, false);
-    await sSet(`users:${profile.id}`, { id: profile.id, name: updated.name, color: updated.color, emoji: updated.emoji, lastSeen: Date.now() }, true);
+    await sSet(`users:${profile.id}`, { id: profile.id, name: updated.name, color: updated.color, emoji: updated.emoji, photo: updated.photo || null, lastSeen: Date.now() }, true);
   };
 
   const handleSignOut = async () => {
@@ -2146,7 +2207,7 @@ function App() {
   /* ---- presence heartbeat ---- */
   useEffect(() => {
     if (!profile) return;
-    const beat = () => sSet(`users:${profile.id}`, { ...profile, lastSeen: Date.now() }, true);
+    const beat = () => sSet(`users:${profile.id}`, { id: profile.id, name: profile.name, color: profile.color, emoji: profile.emoji, photo: profile.photo || null, lastSeen: Date.now() }, true);
     beat();
     const iv = setInterval(beat, 20000);
     return () => clearInterval(iv);
@@ -2166,7 +2227,7 @@ function App() {
       if (existing && existing.ts >= d.ts) return;
       const isOpen = activeContactRef.current && activeContactRef.current.id === d.otherId && view === "chat";
       next[d.otherId] = {
-        id: d.otherId, name: d.otherName, emoji: d.otherEmoji, color: d.otherColor,
+        id: d.otherId, name: d.otherName, emoji: d.otherEmoji, color: d.otherColor, photo: d.otherPhoto || null,
         preview: d.preview, ts: d.ts, unread: !isOpen,
       };
       changed = true;
@@ -2185,7 +2246,7 @@ function App() {
 
   const onSentFromChat = (contact, preview, ts) => {
     setChatlist((prev) => {
-      const next = { ...prev, [contact.id]: { id: contact.id, name: contact.name, emoji: contact.emoji, color: contact.color, preview, ts, unread: false } };
+      const next = { ...prev, [contact.id]: { id: contact.id, name: contact.name, emoji: contact.emoji, color: contact.color, photo: contact.photo || null, preview, ts, unread: false } };
       persistChatlist(next);
       return next;
     });
@@ -2219,7 +2280,7 @@ function App() {
       const duration = call.startTime ? Math.floor((Date.now() - call.startTime) / 1000) : 0;
       const outcome = outcomeOverride || (call.startTime ? "answered" : (call.isCaller ? "no_answer" : "missed"));
       logCall({
-        contactId: call.contact.id, contactName: call.contact.name, contactEmoji: call.contact.emoji, contactColor: call.contact.color,
+        contactId: call.contact.id, contactName: call.contact.name, contactEmoji: call.contact.emoji, contactColor: call.contact.color, contactPhoto: call.contact.photo || null,
         type: call.type, direction: call.isCaller ? "outgoing" : "incoming", outcome, duration,
       });
     }
@@ -2290,7 +2351,7 @@ function App() {
       const callId = `${Date.now()}_${Math.floor(Math.random() * 9999)}`;
       setActiveCall((prev) => (prev ? { ...prev, callId } : prev));
       await sSet(`call:${contact.id}`, {
-        callId, callerId: profile.id, callerName: profile.name, callerEmoji: profile.emoji, callerColor: profile.color,
+        callId, callerId: profile.id, callerName: profile.name, callerEmoji: profile.emoji, callerColor: profile.color, callerPhoto: profile.photo || null,
         calleeId: contact.id, type, status: "ringing", offer: pc.localDescription.sdp, ts: Date.now(),
       }, true);
       callPollRef.current = setInterval(async () => {
@@ -2317,7 +2378,7 @@ function App() {
     setIncomingCall(null);
     setActiveCall({
       callId: doc.callId, isCaller: false, type: doc.type, status: "connecting",
-      contact: { id: doc.callerId, name: doc.callerName, emoji: doc.callerEmoji, color: doc.callerColor },
+      contact: { id: doc.callerId, name: doc.callerName, emoji: doc.callerEmoji, color: doc.callerColor, photo: doc.callerPhoto },
       startTime: null, muted: false, videoOff: false,
     });
     try {
@@ -2355,7 +2416,7 @@ function App() {
     if (!doc) return;
     setIncomingCall(null);
     logCall({
-      contactId: doc.callerId, contactName: doc.callerName, contactEmoji: doc.callerEmoji, contactColor: doc.callerColor,
+      contactId: doc.callerId, contactName: doc.callerName, contactEmoji: doc.callerEmoji, contactColor: doc.callerColor, contactPhoto: doc.callerPhoto || null,
       type: doc.type, direction: "incoming", outcome: "declined", duration: 0,
     });
     await sSet(`call:${profile.id}`, { ...doc, status: "declined" }, true);
@@ -2415,7 +2476,7 @@ function App() {
       const d = await sGet(`call:${profile.id}`, true);
       if (!d || d.status !== "ringing" || d.callId !== incomingCall.callId) {
         logCall({
-          contactId: incomingCall.callerId, contactName: incomingCall.callerName, contactEmoji: incomingCall.callerEmoji, contactColor: incomingCall.callerColor,
+          contactId: incomingCall.callerId, contactName: incomingCall.callerName, contactEmoji: incomingCall.callerEmoji, contactColor: incomingCall.callerColor, contactPhoto: incomingCall.callerPhoto || null,
           type: incomingCall.type, direction: "incoming", outcome: "missed", duration: 0,
         });
         setIncomingCall(null);
@@ -2579,8 +2640,13 @@ input{font-family:inherit;}
 @keyframes fadeSlideUp{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
 .top-bar{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border); background:var(--bg-elevated); flex-shrink:0;}
 .top-title{flex:1; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:800; font-size:17px;}
-.leaderboard-trigger{font-size:16px; line-height:1; padding:4px; border-radius:8px; transition:transform .15s;}
-.leaderboard-trigger:active{transform:scale(1.2);}
+.popularity-trigger{display:flex; flex-direction:column; align-items:center; gap:1px; padding:2px 8px; flex-shrink:0; transition:transform .15s;}
+.popularity-trigger:active{transform:scale(1.15);}
+.popularity-emoji{font-size:17px; line-height:1;}
+.popularity-label{font-size:9px; font-weight:800; color:var(--text-dim);}
+.photo-picker-preview{position:relative; display:block; margin:6px auto 14px;}
+.photo-picker-badge{position:absolute; bottom:2px; inset-inline-end:2px; width:32px; height:32px; border-radius:50%; background:var(--accent); border:3px solid var(--bg-elevated); display:flex; align-items:center; justify-content:center;}
+.photo-picker-btn{width:100%; justify-content:center; margin-top:2px;}
 .leaderboard-row{gap:11px;}
 .leaderboard-rank{min-width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:10px; font-weight:800; font-size:13px; color:var(--text-dim); background:var(--card); flex-shrink:0;}
 .leaderboard-row-me{background:rgba(23,233,165,.06);}
