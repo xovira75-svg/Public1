@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 16</div></div></div>
+<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 20</div></div></div>
 
 <script>
   window.__loadFailures = [];
@@ -43,7 +43,7 @@
     } else {
       lines.push('حدث خطأ غير متوقع أثناء تشغيل التطبيق.');
     }
-    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 16</div>';
+    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 20</div>';
   }
 
   function loadScriptFallback(urls, label) {
@@ -2059,6 +2059,7 @@ function CallScreen({ call, localVideoRef, remoteVideoRef, onHangup, onToggleMut
 
   return (
     <div className="call-overlay">
+      <div className="call-build-tag">build 20</div>
       <video ref={remoteVideoRef} autoPlay playsInline
         style={
           call.type === "video" && call.status === "in-call"
@@ -2085,6 +2086,7 @@ function CallScreen({ call, localVideoRef, remoteVideoRef, onHangup, onToggleMut
         )}
         <div className="call-name" style={call.type === "video" && call.status === "in-call" ? { textShadow: "0 2px 10px rgba(0,0,0,.6)" } : {}}>{call.contact.name}</div>
         <div className="call-sub" style={call.type === "video" && call.status === "in-call" ? { textShadow: "0 2px 10px rgba(0,0,0,.6)" } : {}}>{statusText}</div>
+        <div className="call-debug">status:{call.status} conn:{call.connState || "?"} ice:{call.iceState || "?"} pair:{call.candidateInfo || "…"}</div>
         {call.needsTapToPlay && call.status === "in-call" && (
           <button className="tap-audio-btn" onClick={onEnableAudio}>🔊 اضغط لتفعيل الصوت</button>
         )}
@@ -2095,11 +2097,11 @@ function CallScreen({ call, localVideoRef, remoteVideoRef, onHangup, onToggleMut
         className="local-video-pip" />
 
       <div className="call-actions in-call-actions">
-        <button className="call-round-btn secondary" onClick={onToggleMute}>
+        <button className={"call-round-btn secondary" + (call.muted ? " muted-active" : "")} onClick={onToggleMute}>
           {call.muted ? <MicOff size={22} color="#fff" /> : <Mic size={22} color="#fff" />}
         </button>
         {call.type === "video" && (
-          <button className="call-round-btn secondary" onClick={onToggleVideo}>
+          <button className={"call-round-btn secondary" + (call.videoOff ? " muted-active" : "")} onClick={onToggleVideo}>
             {call.videoOff ? <VideoOff size={22} color="#fff" /> : <Video size={22} color="#fff" />}
           </button>
         )}
@@ -2327,6 +2329,36 @@ function App() {
     }
   }
 
+  function writeIceCandidate(callId, role, candidate) {
+    const key = `icecand:${callId}:${role}:${Date.now()}_${Math.floor(Math.random() * 9999)}`;
+    sSet(key, candidate.toJSON ? candidate.toJSON() : candidate, true);
+  }
+
+  function attachIceDiagnostics(pc) {
+    pc.oniceconnectionstatechange = () => {
+      setActiveCall((prev) => (prev ? { ...prev, iceState: pc.iceConnectionState } : prev));
+    };
+    const collectStats = () => {
+      pc.getStats(null).then((stats) => {
+        let pairInfo = null;
+        stats.forEach((report) => {
+          if (report.type === "candidate-pair" && (report.state === "succeeded" || report.selected)) pairInfo = report;
+        });
+        if (pairInfo) {
+          const local = stats.get(pairInfo.localCandidateId);
+          const remote = stats.get(pairInfo.remoteCandidateId);
+          const info = `${(local && local.candidateType) || "?"}↔${(remote && remote.candidateType) || "?"}`;
+          setActiveCall((prev) => (prev ? { ...prev, candidateInfo: info } : prev));
+        } else {
+          setActiveCall((prev) => (prev ? { ...prev, candidateInfo: "no-pair" } : prev));
+        }
+      }).catch(() => {
+        setActiveCall((prev) => (prev ? { ...prev, candidateInfo: "stats-err" } : prev));
+      });
+    };
+    return collectStats;
+  }
+
   const startCall = async (contact, type) => {
     if (activeCallRef.current) return;
     setActiveCall({ callId: null, isCaller: true, type, status: "calling", contact, startTime: null, muted: false, videoOff: false });
@@ -2339,33 +2371,63 @@ function App() {
       pcRef.current = pc;
       stream.getTracks().forEach((t) => pc.addTrack(t, stream));
       pc.ontrack = handleRemoteTrack;
+      const collectStats = attachIceDiagnostics(pc);
       pc.onconnectionstatechange = () => {
+        setActiveCall((prev) => (prev ? { ...prev, connState: pc.connectionState } : prev));
         if (pc.connectionState === "connected") {
           stopRingtone();
           setActiveCall((prev) => (prev ? { ...prev, status: "in-call", startTime: prev.startTime || Date.now() } : prev));
+          collectStats();
         }
       };
+
+      const callId = `${Date.now()}_${Math.floor(Math.random() * 9999)}`;
+      pc.onicecandidate = (e) => { if (e.candidate) writeIceCandidate(callId, "caller", e.candidate); };
+
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      await waitIceGathering(pc);
-      const callId = `${Date.now()}_${Math.floor(Math.random() * 9999)}`;
       setActiveCall((prev) => (prev ? { ...prev, callId } : prev));
       await sSet(`call:${contact.id}`, {
         callId, callerId: profile.id, callerName: profile.name, callerEmoji: profile.emoji, callerColor: profile.color, callerPhoto: profile.photo || null,
         calleeId: contact.id, type, status: "ringing", offer: pc.localDescription.sdp, ts: Date.now(),
       }, true);
+
+      const knownCalleeIce = new Set();
+      let pendingCandidates = [];
       callPollRef.current = setInterval(async () => {
+        setActiveCall((prev) => (prev && prev.status !== "in-call" && pc.connectionState === "connected"
+          ? { ...prev, status: "in-call", startTime: prev.startTime || Date.now(), connState: pc.connectionState, iceState: pc.iceConnectionState }
+          : prev ? { ...prev, connState: pc.connectionState, iceState: pc.iceConnectionState } : prev));
+        if (pc.connectionState === "connected") { stopRingtone(); collectStats(); }
         const doc = await sGet(`call:${contact.id}`, true);
-        if (!doc || doc.callId !== callId) return;
-        if (doc.status === "accepted" && doc.answer && pc.signalingState === "have-local-offer") {
-          try { await pc.setRemoteDescription({ type: "answer", sdp: doc.answer }); } catch (e) {}
-        } else if (doc.status === "declined") {
-          showToast("تم رفض المكالمة");
-          cleanupCall("declined");
-        } else if (doc.status === "ended") {
-          cleanupCall();
+        if (doc && doc.callId === callId) {
+          if (doc.status === "accepted" && doc.answer && pc.signalingState === "have-local-offer") {
+            try {
+              await pc.setRemoteDescription({ type: "answer", sdp: doc.answer });
+              for (const c of pendingCandidates) { try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {} }
+              pendingCandidates = [];
+            } catch (e) {}
+          } else if (doc.status === "declined") {
+            showToast("تم رفض المكالمة");
+            cleanupCall("declined");
+            return;
+          } else if (doc.status === "ended") {
+            cleanupCall();
+            return;
+          }
         }
-      }, 2000);
+        const iceKeys = await sList(`icecand:${callId}:callee:`, true);
+        const freshIce = iceKeys.filter((k) => !knownCalleeIce.has(k));
+        if (freshIce.length) {
+          const cands = await Promise.all(freshIce.map((k) => sGet(k, true)));
+          freshIce.forEach((k) => knownCalleeIce.add(k));
+          for (const cand of cands) {
+            if (!cand) continue;
+            if (pc.remoteDescription) { try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) {} }
+            else pendingCandidates.push(cand);
+          }
+        }
+      }, 1500);
     } catch (err) {
       showToast("تعذر الوصول إلى الميكروفون أو الكاميرا");
       cleanupCall();
@@ -2389,21 +2451,40 @@ function App() {
       pcRef.current = pc;
       stream.getTracks().forEach((t) => pc.addTrack(t, stream));
       pc.ontrack = handleRemoteTrack;
+      const collectStats = attachIceDiagnostics(pc);
       pc.onconnectionstatechange = () => {
+        setActiveCall((prev) => (prev ? { ...prev, connState: pc.connectionState } : prev));
         if (pc.connectionState === "connected") {
           setActiveCall((prev) => (prev ? { ...prev, status: "in-call", startTime: prev.startTime || Date.now() } : prev));
+          collectStats();
         }
       };
+      pc.onicecandidate = (e) => { if (e.candidate) writeIceCandidate(doc.callId, "callee", e.candidate); };
+
       await pc.setRemoteDescription({ type: "offer", sdp: doc.offer });
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
-      await waitIceGathering(pc);
       await sSet(`call:${profile.id}`, { ...doc, status: "accepted", answer: pc.localDescription.sdp }, true);
+
+      const knownCallerIce = new Set();
       callPollRef.current = setInterval(async () => {
+        setActiveCall((prev) => (prev && prev.status !== "in-call" && pc.connectionState === "connected"
+          ? { ...prev, status: "in-call", startTime: prev.startTime || Date.now(), connState: pc.connectionState, iceState: pc.iceConnectionState }
+          : prev ? { ...prev, connState: pc.connectionState, iceState: pc.iceConnectionState } : prev));
+        if (pc.connectionState === "connected") collectStats();
         const d = await sGet(`call:${profile.id}`, true);
-        if (!d || d.callId !== doc.callId) return;
-        if (d.status === "ended") cleanupCall();
-      }, 2500);
+        if (d && d.callId === doc.callId && d.status === "ended") { cleanupCall(); return; }
+        const iceKeys = await sList(`icecand:${doc.callId}:caller:`, true);
+        const freshIce = iceKeys.filter((k) => !knownCallerIce.has(k));
+        if (freshIce.length) {
+          const cands = await Promise.all(freshIce.map((k) => sGet(k, true)));
+          freshIce.forEach((k) => knownCallerIce.add(k));
+          for (const cand of cands) {
+            if (!cand) continue;
+            try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) {}
+          }
+        }
+      }, 1500);
     } catch (err) {
       showToast("تعذر قبول المكالمة");
       sSet(`call:${profile.id}`, { ...doc, status: "ended" }, true);
@@ -2842,6 +2923,8 @@ input{font-family:inherit;}
 @keyframes ringPulse{0%{width:116px; height:116px; opacity:.55;} 100%{width:200px; height:200px; opacity:0;}}
 .call-name{font-weight:800; font-size:22px; margin-top:4px;}
 .call-sub{color:var(--text-dim); font-size:14px; font-family:'Space Mono', monospace;}
+.call-debug{color:#B8FFE0; font-size:11.5px; font-family:'Space Mono', monospace; margin-top:8px; background:rgba(0,0,0,.4); padding:5px 12px; border-radius:10px; direction:ltr;}
+.call-build-tag{position:absolute; top:12px; inset-inline-end:14px; z-index:5; color:rgba(255,255,255,.4); font-size:10px; font-family:'Space Mono', monospace;}
 .tap-audio-btn{margin-top:16px; background:var(--accent); color:#07130F; font-weight:800; font-size:13.5px; padding:11px 18px; border-radius:14px; animation:recordPulse 1.6s infinite;}
 .wave-bars{position:absolute; display:flex; align-items:center; gap:4px; z-index:2;}
 .wave-bars span{width:4px; height:14px; background:var(--accent); border-radius:3px; animation:wave 1s ease-in-out infinite;}
@@ -2854,6 +2937,7 @@ input{font-family:inherit;}
 .call-round-btn.accept{background:linear-gradient(135deg,var(--accent),var(--accent-dim)); box-shadow:0 8px 24px rgba(23,233,165,.4);}
 .call-round-btn.decline{background:linear-gradient(135deg,#FF5470,#B91C3C); box-shadow:0 8px 24px rgba(255,84,112,.4);}
 .call-round-btn.secondary{background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.14);}
+.call-round-btn.muted-active{background:var(--danger); border-color:var(--danger);}
 .remote-video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; background:#000;}
 .local-video-pip{position:absolute; top:56px; inset-inline-end:20px; width:100px; height:140px; border-radius:16px; object-fit:cover; border:2px solid rgba(255,255,255,.2); z-index:2; box-shadow:0 8px 20px rgba(0,0,0,.5);}
 
