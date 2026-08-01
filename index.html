@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 22</div></div></div>
+<div id="root"><div id="boot-hint">جارٍ التحميل…<div class="ver">build 23</div></div></div>
 
 <script>
   window.__loadFailures = [];
@@ -43,7 +43,7 @@
     } else {
       lines.push('حدث خطأ غير متوقع أثناء تشغيل التطبيق.');
     }
-    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 22</div>';
+    h.innerHTML = '<div><b>تعذر تشغيل التطبيق</b><div class="diag">' + lines.join('\n') + '</div></div><div class="ver">build 23</div>';
   }
 
   function loadScriptFallback(urls, label) {
@@ -2042,7 +2042,7 @@ function IncomingCallOverlay({ call, onAccept, onDecline }) {
 }
 
 /* -------------------------------- Call screen ------------------------------- */
-function CallScreen({ call, localVideoRef, remoteVideoRef, onHangup, onToggleMute, onToggleVideo, onEnableAudio }) {
+function CallScreen({ call, localVideoRef, remoteVideoRef, remoteAudioRef, onHangup, onToggleMute, onToggleVideo, onEnableAudio }) {
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     if (call.status !== "in-call" || !call.startTime) return;
@@ -2059,7 +2059,7 @@ function CallScreen({ call, localVideoRef, remoteVideoRef, onHangup, onToggleMut
 
   return (
     <div className="call-overlay">
-      <div className="call-build-tag">build 22</div>
+      <div className="call-build-tag">build 23</div>
       <video ref={remoteVideoRef} autoPlay playsInline
         style={
           call.type === "video" && call.status === "in-call"
@@ -2067,6 +2067,7 @@ function CallScreen({ call, localVideoRef, remoteVideoRef, onHangup, onToggleMut
             : { position: "absolute", width: 2, height: 2, opacity: 0, pointerEvents: "none" }
         }
         className={call.type === "video" && call.status === "in-call" ? "remote-video" : ""} />
+      <audio ref={remoteAudioRef} autoPlay />
       {!(call.type === "video" && call.status === "in-call") && <div className="call-bg-glow" />}
 
       <div className="call-center" style={{ position: call.type === "video" && call.status === "in-call" ? "absolute" : "relative", top: call.type === "video" && call.status === "in-call" ? 40 : "auto" }}>
@@ -2138,6 +2139,7 @@ function App() {
   const callPollRef = useRef(null);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const remoteAudioRef = useRef(null);
   const ringIntervalRef = useRef(null);
   const ringCtxRef = useRef(null);
 
@@ -2296,6 +2298,7 @@ function App() {
     if (localStreamRef.current) { localStreamRef.current.getTracks().forEach((t) => t.stop()); localStreamRef.current = null; }
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
     stopRingtone();
     setActiveCall(null);
   }
@@ -2322,13 +2325,20 @@ function App() {
     ringCtxRef.current = null;
   }
 
-  function handleRemoteTrack(e) {
-    if (!remoteVideoRef.current) return;
+  function activeMediaEl() {
+    const call = activeCallRef.current;
+    if (!call) return remoteAudioRef.current || remoteVideoRef.current;
+    return call.type === "video" ? remoteVideoRef.current : remoteAudioRef.current;
+  }
+
+  function handleRemoteTrack(e, callType) {
     const stream = e.streams && e.streams[0] ? e.streams[0] : new MediaStream([e.track]);
-    remoteVideoRef.current.srcObject = stream;
-    remoteVideoRef.current.muted = false;
-    remoteVideoRef.current.volume = 1;
-    const p = remoteVideoRef.current.play();
+    const target = callType === "video" ? remoteVideoRef.current : remoteAudioRef.current;
+    if (!target) return;
+    target.srcObject = stream;
+    target.muted = false;
+    target.volume = 1;
+    const p = target.play();
     if (p && p.catch) {
       p.catch((err) => {
         setActiveCall((prev) => (prev ? { ...prev, needsTapToPlay: true, playError: String((err && err.name) || err) } : prev));
@@ -2337,7 +2347,7 @@ function App() {
   }
 
   function retryRemotePlayIfPaused() {
-    const rv = remoteVideoRef.current;
+    const rv = activeMediaEl();
     if (!rv || !rv.srcObject) return;
     if (rv.paused) {
       rv.muted = false;
@@ -2358,13 +2368,13 @@ function App() {
   function mediaDebugString() {
     const local = localStreamRef.current;
     const lt = local ? local.getAudioTracks()[0] : null;
-    const rv = remoteVideoRef.current;
+    const rv = activeMediaEl();
     const rs = rv && rv.srcObject;
     const rt = rs && rs.getAudioTracks ? rs.getAudioTracks()[0] : null;
     const localInfo = lt ? `on:${lt.enabled} live:${lt.readyState === "live"}` : "none";
     const remoteInfo = rt ? `on:${rt.enabled} live:${rt.readyState === "live"} muted:${rt.muted}` : "none";
-    const vidInfo = rv ? `paused:${rv.paused} vol:${rv.volume} muted:${rv.muted}` : "no-el";
-    return `mic[${localInfo}] remote[${remoteInfo}] video[${vidInfo}]`;
+    const vidInfo = rv ? `paused:${rv.paused} vol:${rv.volume} muted:${rv.muted} el:${rv.tagName}` : "no-el";
+    return `mic[${localInfo}] remote[${remoteInfo}] out[${vidInfo}]`;
   }
 
   function writeIceCandidate(callId, role, candidate) {
@@ -2408,7 +2418,7 @@ function App() {
       const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
       pcRef.current = pc;
       stream.getTracks().forEach((t) => pc.addTrack(t, stream));
-      pc.ontrack = handleRemoteTrack;
+      pc.ontrack = (e) => handleRemoteTrack(e, type);
       const collectStats = attachIceDiagnostics(pc);
       pc.onconnectionstatechange = () => {
         setActiveCall((prev) => (prev ? { ...prev, connState: pc.connectionState } : prev));
@@ -2490,7 +2500,7 @@ function App() {
       const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
       pcRef.current = pc;
       stream.getTracks().forEach((t) => pc.addTrack(t, stream));
-      pc.ontrack = handleRemoteTrack;
+      pc.ontrack = (e) => handleRemoteTrack(e, doc.type);
       const collectStats = attachIceDiagnostics(pc);
       pc.onconnectionstatechange = () => {
         setActiveCall((prev) => (prev ? { ...prev, connState: pc.connectionState } : prev));
@@ -2571,7 +2581,7 @@ function App() {
   };
 
   const enableAudio = () => {
-    const rv = remoteVideoRef.current;
+    const rv = activeMediaEl();
     if (rv) {
       rv.muted = false;
       rv.volume = 1;
@@ -2679,7 +2689,7 @@ function App() {
         {activeCall && (
           <CallScreen
             call={activeCall}
-            localVideoRef={localVideoRef} remoteVideoRef={remoteVideoRef}
+            localVideoRef={localVideoRef} remoteVideoRef={remoteVideoRef} remoteAudioRef={remoteAudioRef}
             onHangup={hangup} onToggleMute={toggleMute} onToggleVideo={toggleVideo} onEnableAudio={enableAudio}
           />
         )}
